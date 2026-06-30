@@ -1,0 +1,18 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "db:generate": {
+      "outputs": ["packages/shared-types/database.types.ts"],
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["^db:generate", "^build"],
+      "outputs": ["dist/**", ".next/**", ".expo/**"]
+    },
+    "dev": {
+      "dependsOn": ["^db:generate"],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

@@ -1,0 +1,41 @@
+# Configuración global del proyecto
+project_id = "fuelflow_core"
+
+[api]
+enabled = true
+max_rows = 1000 # Límite de seguridad para evitar consultas masivas accidentales
+# Comentados por incompatibilidad con el schema local del CLI:
+# db_pool_min = 1
+# db_pool_max = 20
+
+[db]
+port = 5432
+shadow_port = 5433
+
+# [edge_functions] - Deshabilitado temporalmente ya que el CLI actual usa [edge_runtime] o rechaza esta llave global.
+# enabled = true
+# function_timeout_ms = 10000 
+
+[realtime]
+enabled = true
+# Comentado por incompatibilidad de CLI
+# max_concurrent_clients = 100
+
+[analytics]
+enabled = true # Crucial para monitorear el rendimiento de tus triggers de auditoría
+
+# Configuración de pg_net para la automatización forense
+[db.pooler]
+enabled = true
+pool_mode = "transaction" 
+
+[functions.webhook-geometry-ingest]
+enabled = true
+verify_jwt = false
+import_map = "./functions/webhook-geometry-ingest/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/webhook-geometry-ingest/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/webhook-geometry-ingest/*.html" ]

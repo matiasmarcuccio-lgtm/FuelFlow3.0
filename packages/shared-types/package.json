@@ -1,0 +1,9 @@
+{
+  "name": "@fuelflow/shared-types",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "db:generate": "npx supabase gen types typescript --local > database.types.ts"
+  }
+}
