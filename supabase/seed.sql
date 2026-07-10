@@ -1,0 +1,5 @@
+-- Este archivo se deja intencionalmente vacío para que 'supabase db reset' 
+-- no falle al intentar cargar datos topológicos antes de que existan los usuarios de GoTrue.
+-- La inyección de datos ocurre en dos pasos manuales posteriores:
+-- 1. node scripts/seed-users.js
+-- 2. supabase db psql -f supabase/seed-topology.sql

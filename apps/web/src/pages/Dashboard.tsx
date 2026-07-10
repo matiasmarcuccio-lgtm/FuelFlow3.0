@@ -14,7 +14,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // 1. Cargamos el perfil maestro (Capa de Identidad)
+  // 1. Cargamos el perfil maestro (Capa de Identity)
   const { data: profile, isLoading: loadingProfile, error: errorProfile } = useCurrentProfile();
 
   // 2. Cargamos los camiones
@@ -39,7 +39,7 @@ export default function Dashboard() {
       const { id: _, created_at: __, fleet_id: ___, ...cleanFormData } = newRow as import('@fuelflow/shared-types').AssetRow;
       
       toast({
-        title: "Vehículo Registrado",
+        title: "Vehicle Registrado",
         description: "El activo ha sido ingresado a la flota.",
       });
 
@@ -70,11 +70,11 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">Panel de Control Logístico</h1>
             {profile && (
               <p className="text-sm text-gray-500 mt-1">
-                Flota: <strong className="text-gray-900">{profile.full_name}</strong> | Rol: {profile.role}
+                Fleet: <strong className="text-gray-900">{profile.full_name}</strong> | Rol: {profile.role}
               </p>
             )}
           </div>
-          <Button variant="outline" onClick={handleLogout}>Cerrar Sesión</Button>
+          <Button variant="outline" onClick={handleLogout}>Logout</Button>
         </header>
 
         <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">

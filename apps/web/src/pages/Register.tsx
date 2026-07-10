@@ -44,10 +44,10 @@ export default function Register() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div style={{ padding: '2rem', maxWidth: '400px', width: '100%', background: 'white', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>Crear Flota B2B</h1>
+        <h1 style={{ textAlign: 'center', marginBottom: '2rem' }}>Crear Fleet B2B</h1>
         <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
-            <label>Nombre de la Empresa o Persona</label>
+            <label>Name de la Empresa o Persona</label>
             <input
               type="text"
               value={fullName}
@@ -67,7 +67,7 @@ export default function Register() {
             />
           </div>
           <div>
-            <label>Contraseña</label>
+            <label>Password</label>
             <input
               type="password"
               value={password}

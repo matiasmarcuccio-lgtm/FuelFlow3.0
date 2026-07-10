@@ -85,7 +85,7 @@ export const TelemetryMap = () => {
               weight: hasAnomaly ? 2 : 1
             }}
           >
-            <Popup className="bg-slate-800 border border-slate-700">
+            <Popup className="bg-surface border border-outline-variant shadow-sm border border-outline-variant">
               <div className="font-mono text-xs">
                 <strong>ID:</strong> {node.id.split('-')[0]}<br/>
                 <strong>STATUS:</strong> {node.status}<br/>

@@ -1,0 +1,122 @@
+{
+  "name": "FuelFlow Command Center (Layer 4)",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "fuelflow-events",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook (pg_net Sink)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.body.event_type }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "maintenance_critical",
+              "output": 0
+            },
+            {
+              "value2": "compliance_violation",
+              "output": 0
+            },
+            {
+              "value2": "end_of_shift_manifest",
+              "output": 1
+            }
+          ]
+        }
+      },
+      "name": "Enrutador Lógico",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "from": "FuelFlowAlerts",
+        "to": "+61400000000",
+        "body": "=🚨 EMERGENCIA FuelFlow 🚨\n\nTipo: {{ $json.body.event_type }}\nVehículo ID: {{ $json.body.payload.asset_id }}\n\nMensaje: {{ $json.body.payload.message || 'Defecto Crítico Detectado' }}\n\n[Responda INMEDIATAMENTE]"
+      },
+      "name": "Twilio (SMS Emergencia)",
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        700,
+        200
+      ],
+      "credentials": {
+        "twilioApi": {
+          "id": "1",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "admin@fuelflow.com",
+        "toEmail": "management@fuelflow.com",
+        "subject": "=Manifiesto As-Built: Cierre de Turno [{{ $json.body.payload.asset_id }}]",
+        "text": "=Se ha generado un Manifiesto As-Built inmutable para el cierre de turno.\n\n- Operador: {{ $json.body.payload.operator_id }}\n- Proyecto: {{ $json.body.payload.project_id }}\n- Máquina: {{ $json.body.payload.asset_id }}\n- Toneladas Extraídas: {{ $json.body.payload.total_tonnage }} T\n- Ciclos Completados: {{ $json.body.payload.total_cycles }}\n- Horas de Inicio: {{ $json.body.payload.shift_start_time }}\n- Fin de Turno: {{ $json.body.payload.shift_end_time }}\n\nEste reporte ha sido reconciliado en el Kiosk de cabina mediante Edge Computing y transmitido de forma resiliente por TanStack offlineFirst."
+      },
+      "name": "Send Email (SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        700,
+        400
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "2",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook (pg_net Sink)": {
+      "main": [
+        [
+          {
+            "node": "Enrutador Lógico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrutador Lógico": {
+      "main": [
+        [
+          {
+            "node": "Twilio (SMS Emergencia)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email (SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {}
+}

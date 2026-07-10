@@ -279,7 +279,7 @@ export function AssetForm({ initialData, onSubmit, isPending }: AssetFormProps) 
 
         <div className="flex justify-end border-t pt-4">
           <Button type="submit" disabled={isPending} className="w-full md:w-auto">
-            {isPending ? 'Procesando...' : 'Guardar Información'}
+            {isPending ? 'Processing...' : 'Save Información'}
           </Button>
         </div>
       </form>

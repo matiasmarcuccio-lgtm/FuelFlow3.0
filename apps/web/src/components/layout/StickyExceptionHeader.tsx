@@ -46,7 +46,7 @@ export const StickyExceptionHeader = () => {
     return (
       <div className="bg-red-900 border-b border-red-700 p-2 flex justify-center items-center gap-2 z-50 shadow-md">
         <AlertTriangle className="w-5 h-5 text-red-500 animate-pulse" />
-        <span className="text-white font-bold text-sm tracking-widest uppercase">
+        <span className="text-foreground font-bold text-sm tracking-widest uppercase">
           WARNING: REALTIME CONNECTION LOST - UNVERIFIED DATA
         </span>
       </div>
@@ -55,8 +55,8 @@ export const StickyExceptionHeader = () => {
 
   if (anomalies.length === 0) {
     return (
-      <div className="bg-slate-900 border-b border-slate-800 px-6 py-2 flex justify-between items-center z-50 shadow-md">
-        <span className="text-slate-400 text-sm font-medium tracking-wide">SYSTEM NOMINAL</span>
+      <div className="bg-background border-b border-outline-variant px-6 py-2 flex justify-between items-center z-50 shadow-md">
+        <span className="text-on-surface-variant text-sm font-medium tracking-wide">SYSTEM NOMINAL</span>
         <span className="flex h-3 w-3">
           <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
         </span>
@@ -149,18 +149,18 @@ export const StickyExceptionHeader = () => {
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-3">
-          <AlertTriangle className="w-6 h-6 text-white animate-bounce" />
-          <span className="text-white font-bold tracking-wider">
+          <AlertTriangle className="w-6 h-6 text-foreground animate-bounce" />
+          <span className="text-foreground font-bold tracking-wider">
             {anomalies.length} CRITICAL EXCEPTION{anomalies.length > 1 ? 'S' : ''} DETECTED
           </span>
         </div>
-        <button className="text-white">
+        <button className="text-foreground">
           {expanded ? <ChevronUp /> : <ChevronDown />}
         </button>
       </div>
 
       {expanded && (
-        <div className="bg-slate-900 max-h-[80vh] overflow-y-auto p-4 space-y-4">
+        <div className="bg-background max-h-[80vh] overflow-y-auto p-4 space-y-4">
           {sortedAnomalies.map(anomaly => {
             const text = resolutionText[anomaly.id] || '';
             const tags = selectedTags[anomaly.id] || [];
@@ -175,7 +175,7 @@ export const StickyExceptionHeader = () => {
             if (isBreakdown && !isEmergency) borderColor = 'border-orange-500';
 
             return (
-              <div key={anomaly.id} className={`bg-slate-800 border-l-4 ${borderColor} rounded-md p-4 transition-transform ${isShaking ? 'translate-x-2' : ''}`}>
+              <div key={anomaly.id} className={`bg-surface border border-outline-variant shadow-sm border-l-4 ${borderColor} rounded-md p-4 transition-transform ${isShaking ? 'translate-x-2' : ''}`}>
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     {isEmergency ? <ShieldAlert className="w-5 h-5 text-purple-500" /> : <AlertTriangle className={`w-5 h-5 ${isBreakdown ? 'text-orange-500' : 'text-red-500'}`} />}
@@ -183,19 +183,19 @@ export const StickyExceptionHeader = () => {
                       {isEmergency ? 'DRIVER EMERGENCY OVERRIDE' : isBreakdown ? 'UNIT BREAKDOWN' : anomaly.anomaly_flag}
                     </span>
                   </div>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-on-surface-variant">
                     {anomaly.completed_at_local ? formatDistanceToNow(new Date(anomaly.completed_at_local), { addSuffix: true }) : 'N/A'}
                   </span>
                 </div>
 
                 {!isEmergency && !isBreakdown && anomaly.anomaly_flag === 'MASS_MISMATCH' && (
                   <div className="flex gap-4 mb-4">
-                    <div className="flex-1 bg-slate-900 p-2 rounded text-sm">
-                      <span className="text-slate-400 block text-xs">Driver Claimed Mass:</span>
-                      <span className="font-mono text-white">{anomaly.loaded_gross_mass} kg</span>
+                    <div className="flex-1 bg-background p-2 rounded text-sm">
+                      <span className="text-on-surface-variant block text-xs">Driver Claimed Mass:</span>
+                      <span className="font-mono text-foreground">{anomaly.loaded_gross_mass} kg</span>
                     </div>
-                    <div className="flex-1 bg-slate-900 p-2 rounded border border-red-900/50 text-sm">
-                      <span className="text-slate-400 block text-xs">OCR Extracted Mass:</span>
+                    <div className="flex-1 bg-background p-2 rounded border border-red-900/50 text-sm">
+                      <span className="text-on-surface-variant block text-xs">OCR Extracted Mass:</span>
                       <span className="font-mono text-red-400 font-bold">{anomaly.ocr_mass_extracted || 'N/A'} kg</span>
                     </div>
                   </div>
@@ -203,31 +203,31 @@ export const StickyExceptionHeader = () => {
 
                 {anomaly.docket_image_path && (
                   <div className="mb-4">
-                    <a href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/docket_evidence/${anomaly.docket_image_path}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline text-sm">
+                    <a href={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/docket_evidence/${anomaly.docket_image_path}`} target="_blank" rel="noreferrer" className="text-primary hover:underline text-sm">
                       View Docket Evidence &rarr;
                     </a>
                   </div>
                 )}
 
                 {/* WITNESS STAND UI */}
-                <div className="mt-4 pt-4 border-t border-slate-700 bg-slate-800/50 p-3 rounded">
-                  <div className="flex items-center gap-2 mb-2 text-slate-300">
-                    <Scale className="w-4 h-4 text-blue-400" />
+                <div className="mt-4 pt-4 border-t border-outline-variant bg-surface border border-outline-variant shadow-sm/50 p-3 rounded">
+                  <div className="flex items-center gap-2 mb-2 text-on-surface">
+                    <Scale className="w-4 h-4 text-primary" />
                     <p className="text-xs font-bold uppercase">The Witness Stand (CoR Legal Declaration)</p>
                   </div>
-                  <p className="text-[10px] text-slate-400 mb-3 italic">
+                  <p className="text-[10px] text-on-surface-variant mb-3 italic">
                     By submitting this resolution, I certify under penalty of perjury that I have investigated this anomaly and assume operational liability for clearing this vehicle.
                   </p>
                   
                   {/* Step 1: Fact Declaration (Tags) */}
                   <div className="mb-3">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Step 1: Declare Verified Facts</p>
+                    <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-1">Step 1: Declare Verified Facts</p>
                     <div className="flex flex-wrap gap-2">
                       {CORRECTIVE_ACTIONS.map(tag => (
                         <button
                           key={tag}
                           onClick={() => handleToggleTag(anomaly.id, tag)}
-                          className={`text-[10px] px-2 py-1 rounded-full border ${tags.includes(tag) ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-900 border-slate-600 text-slate-400 hover:border-slate-400'}`}
+                          className={`text-[10px] px-2 py-1 rounded-full border ${tags.includes(tag) ? 'bg-primary text-on-primary border-blue-500 text-white' : 'bg-background border-outline text-on-surface-variant hover:border-slate-400'}`}
                         >
                           {tag.replace(/_/g, ' ')}
                         </button>
@@ -237,11 +237,11 @@ export const StickyExceptionHeader = () => {
 
                   {/* Step 2: Narrative Construction (Text) */}
                   <div className="relative mb-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">
+                    <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-1">
                       Step 2: Legal Narrative {isSequentialLocked && <span className="text-red-400">(Locked - Select Facts First)</span>}
                     </p>
                     <textarea 
-                      className={`w-full bg-slate-900 border ${warningMsg[anomaly.id] ? 'border-red-500 focus:border-red-500' : 'border-slate-600 focus:border-blue-500'} rounded p-2 text-sm text-slate-200 outline-none transition-colors ${isSequentialLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      className={`w-full bg-background border ${warningMsg[anomaly.id] ? 'border-red-500 focus:border-red-500' : 'border-outline focus:border-blue-500'} rounded p-2 text-sm text-foreground outline-none transition-colors ${isSequentialLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                       placeholder={isSequentialLocked ? "Select a Fact Tag above to unlock..." : "Justify this override for NHVR audit..."}
                       rows={2}
                       disabled={isSequentialLocked}
@@ -267,7 +267,7 @@ export const StickyExceptionHeader = () => {
 
                   <button 
                     onClick={() => handleForceApprove(anomaly)}
-                    className="w-full text-sm font-medium py-2 rounded transition-colors bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+                    className="w-full text-sm font-medium py-2 rounded transition-colors bg-primary text-on-primary hover:bg-primary-container text-on-primary-container text-white shadow-lg"
                   >
                     Sign & Cryptographically Seal
                   </button>

@@ -5,6 +5,17 @@
 @import 'leaflet/dist/leaflet.css';
 
 @layer base {
+  body {
+    background-color: theme('colors.slate.900');
+    color: theme('colors.slate.100');
+    /* Eliminación de feedback táctil fantasma (Phase 3) */
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Supresión de zoom en inputs (Phase 3) */
+  input, select, button {
+    touch-action: manipulation;
+  }
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;

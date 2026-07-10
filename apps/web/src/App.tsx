@@ -1,10 +1,12 @@
 import React from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
+import { queryClient, idbPersister } from './lib/queryClient'
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'
 import { ExceptionProvider } from './context/ExceptionContext'
 import { Sidebar } from './components/layout/Sidebar'
 import { StickyExceptionHeader } from './components/layout/StickyExceptionHeader'
-import { LiveOps } from './pages/LiveOps'
+import { useRealtimeSync } from './hooks/useRealtimeSync'
+import { JITSiteDashboard } from './pages/JITSiteDashboard'
 import { HealthDashboard } from './pages/HealthDashboard'
 import { SystemConfig } from './pages/SystemConfig'
 import { ComplianceReport } from './pages/ComplianceReport'
@@ -17,26 +19,43 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import AuthCallback from './pages/AuthCallback'
+import { HandoverContainer } from './features/handover/HandoverContainer'
+import { ScannerPresenter } from './features/handover/ScannerPresenter'
+import { KinematicKiosk } from './features/kiosk/KinematicKiosk'
+import { WeighbridgeDashboard } from './pages/WeighbridgeDashboard'
+import { AnalyticsContainer } from './features/dashboard/AnalyticsContainer'
+import { ProjectGatekeeper } from './components/ProjectGatekeeper';
 
-const queryClient = new QueryClient()
+// Wrapper para extraer parámetros de la URL para el HandoverContainer
+import { useParams } from 'react-router-dom';
+import { useCrewRosterSync } from './features/handover/useCrewRosterSync';
 
-const AppLayout = () => {
-  return (
-    <div className="flex h-screen w-screen bg-slate-900 text-slate-200 overflow-hidden font-sans">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <StickyExceptionHeader />
-        <main className="flex-1 relative overflow-hidden flex flex-col">
-          <Outlet />
-        </main>
-      </div>
-    </div>
-  )
-}
+const HandoverRouteWrapper = () => {
+  const { projectId, assetId } = useParams();
+  
+  // Hidratación proactiva (Si hay red, actualiza la caché, si no, usa la de idb-keyval)
+  useCrewRosterSync(projectId || null);
+
+  if (!projectId || !assetId) return <div className="p-8 text-white">Missing parameters</div>;
+
+  return <HandoverContainer projectId={projectId} assetId={assetId} />;
+};
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider 
+      client={queryClient} 
+      persistOptions={{ 
+        persister: idbPersister,
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 días de retención garantizada
+        // @ts-ignore - Forzamos el volcado inmediato al disco físico de la tablet
+        throttleTime: 0,
+        dehydrateOptions: {
+          shouldDehydrateMutation: (mutation) => true,
+          shouldDehydrateQuery: (query) => true
+        }
+      }}
+    >
       <ExceptionProvider>
         <BrowserRouter>
           <Routes>
@@ -45,9 +64,47 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             
+            {/* Rutas dedicadas tipo Kiosk */}
+            <Route 
+              path="/scan" 
+              element={
+                <ProtectedRoute>
+                  <ScannerPresenter />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/handover/:projectId/:assetId" 
+              element={
+                <ProtectedRoute>
+                  <HandoverRouteWrapper />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Kiosk Mode Cinemático (Tablet en Cabina) */}
+            <Route 
+              path="/kiosk/:projectId/:assetId" 
+              element={
+                <ProtectedRoute>
+                  <KinematicKiosk />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/weighbridge/:projectId?" 
+              element={
+                <ProtectedRoute>
+                  <WeighbridgeDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* Protected Command Center Routes */}
-            <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route index element={<LiveOps />} />
+            <Route path="/" element={<ProtectedRoute><ProjectGatekeeper /></ProtectedRoute>}>
+              <Route index element={<JITSiteDashboard />} />
+              <Route path="analytics/:projectId?" element={<AnalyticsContainer />} />
               <Route path="builder" element={<BuilderDashboard />} />
               <Route path="fleet" element={<FleetDashboard />} />
               <Route path="health" element={<HealthDashboard />} />
@@ -60,7 +117,7 @@ function App() {
           </Routes>
         </BrowserRouter>
       </ExceptionProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   )
 }
 

@@ -16,7 +16,7 @@ export const UserManagement = () => {
     }
   }, [currentProfile]);
 
-  const fetchTeam = async () => {
+  async function fetchTeam() {
     if (!currentProfile) return;
     const { data } = await supabase
       .from('profiles')
@@ -44,26 +44,26 @@ export const UserManagement = () => {
     }
   };
 
-  if (isProfileLoading) return <div className="p-8 text-slate-400">Loading Headquarters...</div>;
+  if (isProfileLoading) return <div className="p-8 text-on-surface-variant">Loading Headquarters...</div>;
 
   const canManage = currentProfile?.role === 'SUPER_ADMIN' || currentProfile?.role === 'FLEET_MANAGER';
 
   return (
-    <div className="flex-1 p-8 bg-slate-900 text-slate-200 h-full overflow-y-auto">
-      <div className="flex justify-between items-center mb-8 border-b border-slate-700 pb-4">
+    <div className="flex-1 p-8 bg-background text-foreground h-full overflow-y-auto">
+      <div className="flex justify-between items-center mb-8 border-b border-outline-variant pb-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="text-blue-500" />
+            <Users className="text-primary" />
             Human Resources (HQ)
           </h1>
-          <p className="text-sm text-slate-400 mt-1">Manage personnel, onboard new drivers, and execute permanent structural changes.</p>
+          <p className="text-sm text-on-surface-variant mt-1">Manage personnel, onboard new drivers, and execute permanent structural changes.</p>
         </div>
 
         {canManage && (
           <button 
             onClick={handleGenerateInvite}
             disabled={fleetCommand.isLoading}
-            className="bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors"
+            className="bg-primary text-on-primary hover:bg-primary text-on-primary disabled:bg-blue-800 text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors"
           >
             <UserPlus className="w-5 h-5" />
             {fleetCommand.isLoading ? 'Generating...' : 'Generate Fleet Invite'}
@@ -86,20 +86,20 @@ export const UserManagement = () => {
 
       {inviteToken && (
         <div className="mb-8 p-6 bg-blue-900/20 border border-blue-500/50 rounded-lg text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 animate-pulse"></div>
-          <h3 className="text-blue-400 font-bold uppercase tracking-widest text-sm mb-2">Secure Enrollment Token Generated</h3>
-          <p className="text-4xl font-mono text-white font-bold tracking-[0.25em] my-4">{inviteToken}</p>
-          <div className="flex justify-center items-center gap-2 text-slate-400 text-xs">
+          <div className="absolute top-0 left-0 w-full h-1 bg-primary text-on-primary animate-pulse"></div>
+          <h3 className="text-primary font-bold uppercase tracking-widest text-sm mb-2">Secure Enrollment Token Generated</h3>
+          <p className="text-4xl font-mono text-foreground font-bold tracking-[0.25em] my-4">{inviteToken}</p>
+          <div className="flex justify-center items-center gap-2 text-on-surface-variant text-xs">
             <Clock className="w-4 h-4" />
             Expires in exactly 24 hours. Instruct the driver to input this code during mobile registration.
           </div>
         </div>
       )}
 
-      <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+      <div className="bg-surface border border-outline-variant shadow-sm rounded-lg border border-outline-variant overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-900/50 border-b border-slate-700 text-xs uppercase tracking-wider text-slate-400">
+            <tr className="bg-background/50 border-b border-outline-variant text-xs uppercase tracking-wider text-on-surface-variant">
               <th className="p-4">Personnel</th>
               <th className="p-4">Role</th>
               <th className="p-4">Status</th>
@@ -110,15 +110,15 @@ export const UserManagement = () => {
             {team.map((member) => (
               <tr key={member.id} className={member.status === 'INACTIVE' ? 'opacity-50' : 'hover:bg-slate-750'}>
                 <td className="p-4">
-                  <div className="font-bold text-white">{member.full_name || 'Unknown Operator'}</div>
-                  <div className="text-xs text-slate-500 font-mono mt-1">ID: {member.id.substring(0, 8)}</div>
+                  <div className="font-bold text-foreground">{member.full_name || 'Unknown Operator'}</div>
+                  <div className="text-xs text-outline font-mono mt-1">ID: {member.id.substring(0, 8)}</div>
                 </td>
                 <td className="p-4">
-                  <span className={`text-xs font-bold px-2 py-1 rounded bg-slate-900 border ${
+                  <span className={`text-xs font-bold px-2 py-1 rounded bg-background border ${
                     member.role === 'SUPER_ADMIN' ? 'border-purple-500 text-purple-400' : 
-                    member.role === 'FLEET_MANAGER' ? 'border-blue-500 text-blue-400' :
+                    member.role === 'FLEET_MANAGER' ? 'border-blue-500 text-primary' :
                     member.role === 'BUILDER' ? 'border-emerald-500 text-emerald-400' :
-                    'border-slate-500 text-slate-400'
+                    'border-outline text-on-surface-variant'
                   }`}>
                     {member.role}
                   </span>
@@ -144,14 +144,14 @@ export const UserManagement = () => {
                     </button>
                   )}
                   {member.status === 'INACTIVE' && (
-                    <span className="text-xs text-slate-500 italic">Terminated</span>
+                    <span className="text-xs text-outline italic">Terminated</span>
                   )}
                 </td>
               </tr>
             ))}
             {team.length === 0 && (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-slate-500">
+                <td colSpan={4} className="p-8 text-center text-outline">
                   No personnel found in this fleet.
                 </td>
               </tr>

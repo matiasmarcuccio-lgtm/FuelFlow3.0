@@ -1,0 +1,75 @@
+name: FuelFlow Production CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Secretos obligatorios para la fase de despliegue
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'apps/web/package-lock.json'
+
+      - name: 🔧 Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # --- FASE 1: VALIDACIÓN E INTEGRACIÓN CONTINUA (Se ejecuta siempre) ---
+      
+      - name: 🔎 Supabase DB Lint
+        run: supabase db lint
+        
+      - name: 📦 Install Frontend Dependencies
+        working-directory: ./apps/web
+        run: npm ci
+
+      - name: 🏗️ Build React Frontend
+        working-directory: ./apps/web
+        run: npm run build
+        
+      # --- FASE 2: DESPLIEGUE A PRODUCCIÓN (Pausa Táctica) ---
+      # Estos pasos están bloqueados intencionalmente hasta que inyectes los Secretos en GitHub
+      
+      - name: 🚀 Push Database Migrations (Supabase Cloud)
+        if: ${{ env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_PROJECT_ID != '' && env.SUPABASE_DB_PASSWORD != '' }}
+        run: supabase db push
+
+      - name: 🌐 Deploy Frontend to Vercel (Edge Network)
+        if: ${{ env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != '' }}
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./apps/web
+          vercel-args: '--prod'
+
+      # Notificación condicional si faltan secretos
+      - name: ⚠️ Deployment Skipped Notice
+        if: ${{ env.SUPABASE_ACCESS_TOKEN == '' || env.VERCEL_TOKEN == '' }}
+        run: |
+          echo "::warning::El pipeline CI (Lint y Build) ha pasado con éxito, pero el despliegue físico a Supabase/Vercel fue omitido."
+          echo "::warning::Por favor configura los secretos SUPABASE_ACCESS_TOKEN y VERCEL_TOKEN en tu repositorio para habilitar el despliegue continuo."

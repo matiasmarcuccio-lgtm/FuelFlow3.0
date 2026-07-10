@@ -60,7 +60,7 @@ export const FleetDashboard = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentProfile]);
 
-  const fetchData = async () => {
+  async function fetchData() {
     const { data: fleetData } = await supabase.from('view_fleet_matrix').select('*');
     if (fleetData) setFleetMatrix(fleetData);
 
@@ -188,18 +188,18 @@ export const FleetDashboard = () => {
   };
 
   return (
-    <div className="flex-1 p-8 bg-slate-900 text-slate-200 h-full flex flex-col relative">
+    <div className="flex-1 p-8 bg-background text-foreground h-full flex flex-col relative">
       
       {/* EVIDENCE VAULT MODAL */}
       {isVaultOpen && (
         <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-full">
-            <div className="bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center">
-              <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-                <FileText className="text-blue-500 w-6 h-6" />
+          <div className="bg-background border border-outline-variant rounded-lg shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-full">
+            <div className="bg-surface border border-outline-variant shadow-sm p-4 border-b border-outline-variant flex justify-between items-center">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
+                <FileText className="text-primary w-6 h-6" />
                 Evidence Vault (Retroactive Docket Injection)
               </h2>
-              <button onClick={() => setIsVaultOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+              <button onClick={() => setIsVaultOpen(false)} className="text-on-surface-variant hover:text-foreground transition-colors">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -211,9 +211,9 @@ export const FleetDashboard = () => {
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">1. Target Pipeline</label>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase mb-2">1. Target Pipeline</label>
                   <select 
-                    className="w-full bg-slate-950 border border-slate-700 rounded p-3 text-white text-sm"
+                    className="w-full bg-slate-950 border border-outline-variant rounded p-3 text-foreground text-sm"
                     value={vaultOrder}
                     onChange={e => setVaultOrder(e.target.value)}
                     disabled={vaultIsSubmitting}
@@ -225,9 +225,9 @@ export const FleetDashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">2. Affected Driver</label>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase mb-2">2. Affected Driver</label>
                   <select 
-                    className="w-full bg-slate-950 border border-slate-700 rounded p-3 text-white text-sm font-mono"
+                    className="w-full bg-slate-950 border border-outline-variant rounded p-3 text-foreground text-sm font-mono"
                     value={vaultDriver}
                     onChange={e => setVaultDriver(e.target.value)}
                     disabled={vaultIsSubmitting}
@@ -243,9 +243,9 @@ export const FleetDashboard = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">3. Physical Evidence Upload</label>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase mb-2">3. Physical Evidence Upload</label>
                 <div 
-                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${vaultImageFile ? 'border-emerald-500 bg-emerald-900/10' : 'border-slate-700 hover:border-slate-500 bg-slate-950'}`}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${vaultImageFile ? 'border-emerald-500 bg-emerald-900/10' : 'border-outline-variant hover:border-outline bg-slate-950'}`}
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input 
@@ -260,13 +260,13 @@ export const FleetDashboard = () => {
                     <div className="flex flex-col items-center">
                       <CheckCircle className="w-10 h-10 text-emerald-500 mb-2" />
                       <p className="text-emerald-400 font-bold">{vaultImageFile.name}</p>
-                      <p className="text-xs text-slate-500 mt-1">Click to replace</p>
+                      <p className="text-xs text-outline mt-1">Click to replace</p>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center">
-                      <UploadCloud className="w-10 h-10 text-slate-500 mb-2" />
-                      <p className="text-slate-400 font-medium">Click to upload weighbridge or docket photo</p>
-                      <p className="text-xs text-slate-500 mt-1">Required to seal bypass</p>
+                      <UploadCloud className="w-10 h-10 text-outline mb-2" />
+                      <p className="text-on-surface-variant font-medium">Click to upload weighbridge or docket photo</p>
+                      <p className="text-xs text-outline mt-1">Required to seal bypass</p>
                     </div>
                   )}
                 </div>
@@ -274,10 +274,10 @@ export const FleetDashboard = () => {
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">4. Paper Reference Number</label>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase mb-2">4. Paper Reference Number</label>
                   <input 
                     type="text" 
-                    className="w-full bg-slate-950 border border-slate-700 rounded p-3 text-white text-sm"
+                    className="w-full bg-slate-950 border border-outline-variant rounded p-3 text-foreground text-sm"
                     placeholder="e.g. DOC-12345"
                     value={vaultDocketRef}
                     onChange={e => setVaultDocketRef(e.target.value)}
@@ -285,10 +285,10 @@ export const FleetDashboard = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2">5. Exact Mass (kg)</label>
+                  <label className="block text-xs font-bold text-on-surface-variant uppercase mb-2">5. Exact Mass (kg)</label>
                   <input 
                     type="number" 
-                    className="w-full bg-slate-950 border border-slate-700 rounded p-3 text-white text-sm font-mono"
+                    className="w-full bg-slate-950 border border-outline-variant rounded p-3 text-foreground text-sm font-mono"
                     placeholder="e.g. 4000"
                     value={vaultTonnage}
                     onChange={e => setVaultTonnage(e.target.value)}
@@ -305,10 +305,10 @@ export const FleetDashboard = () => {
               )}
             </div>
             
-            <div className="p-4 border-t border-slate-700 bg-slate-800 flex justify-end gap-4">
+            <div className="p-4 border-t border-outline-variant bg-surface border border-outline-variant shadow-sm flex justify-end gap-4">
               <button 
                 onClick={() => setIsVaultOpen(false)}
-                className="px-6 py-2 rounded font-bold text-slate-400 hover:text-white transition-colors"
+                className="px-6 py-2 rounded font-bold text-on-surface-variant hover:text-foreground transition-colors"
                 disabled={vaultIsSubmitting}
               >
                 Cancel
@@ -316,7 +316,7 @@ export const FleetDashboard = () => {
               <button 
                 onClick={handleVaultSubmit}
                 disabled={vaultIsSubmitting || !vaultImageFile}
-                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2 px-8 rounded shadow-lg transition-colors flex items-center gap-2"
+                className="bg-primary text-on-primary hover:bg-primary text-on-primary disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2 px-8 rounded shadow-lg transition-colors flex items-center gap-2"
               >
                 {vaultIsSubmitting ? (
                   <>
@@ -340,16 +340,16 @@ export const FleetDashboard = () => {
         >
           <div className="text-center pointer-events-none mt-32">
             <h2 className="text-orange-400 font-bold text-2xl uppercase tracking-widest mb-4 animate-pulse">Tactical HUD Active</h2>
-            <div className="bg-slate-900/80 border border-orange-500/50 p-6 rounded-lg text-left inline-block shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-              <h3 className="text-white font-bold mb-4 uppercase text-sm border-b border-orange-900 pb-2">JIT Ignition Sequence</h3>
-              <ol className="text-slate-300 space-y-3">
-                <li className="flex items-center gap-3"><span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-xs">1</span> <strong className="text-white">Select Open Pipeline</strong> from active orders.</li>
-                <li className="flex items-center gap-3"><span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-xs">2</span> <strong className="text-white">Assign Rested Driver</strong> (Check fatigue column).</li>
-                <li className="flex items-center gap-3"><span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-xs">3</span> <strong className="text-white">Assign Asset</strong> with necessary capabilities.</li>
-                <li className="flex items-center gap-3"><span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-xs">4</span> Click <strong className="text-white">Couple & Ignite Auto-Loop</strong> (Highlighted Left).</li>
+            <div className="bg-background/80 border border-orange-500/50 p-6 rounded-lg text-left inline-block shadow-[0_0_30px_rgba(249,115,22,0.3)]">
+              <h3 className="text-foreground font-bold mb-4 uppercase text-sm border-b border-orange-900 pb-2">JIT Ignition Sequence</h3>
+              <ol className="text-on-surface space-y-3">
+                <li className="flex items-center gap-3"><span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-xs">1</span> <strong className="text-foreground">Select Open Pipeline</strong> from active orders.</li>
+                <li className="flex items-center gap-3"><span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-xs">2</span> <strong className="text-foreground">Assign Rested Driver</strong> (Check fatigue column).</li>
+                <li className="flex items-center gap-3"><span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-xs">3</span> <strong className="text-foreground">Assign Asset</strong> with necessary capabilities.</li>
+                <li className="flex items-center gap-3"><span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-600 text-white font-bold text-xs">4</span> Click <strong className="text-foreground">Couple & Ignite Auto-Loop</strong> (Highlighted Left).</li>
               </ol>
             </div>
-            <p className="text-slate-500 mt-6 text-sm uppercase tracking-widest">Press ESC or click anywhere to dismiss</p>
+            <p className="text-outline mt-6 text-sm uppercase tracking-widest">Press ESC or click anywhere to dismiss</p>
           </div>
         </div>
       )}
@@ -358,23 +358,23 @@ export const FleetDashboard = () => {
         <Truck className="text-orange-500" />
         Fleet Shift Matrix
       </h1>
-      <p className="text-sm text-slate-400 mb-8">Connect assets to active pipelines. Auto-Loop JIT will take over after assignment.</p>
+      <p className="text-sm text-on-surface-variant mb-8">Connect assets to active pipelines. Auto-Loop JIT will take over after assignment.</p>
 
       <div className="grid grid-cols-3 gap-6 flex-1 min-h-0">
         
         {/* Column 1: Dispatch Control (The Shift Matrix) */}
-        <div className={`bg-slate-800 rounded-lg border border-slate-700 flex flex-col overflow-visible ${isHudActive ? 'relative z-50 ring-4 ring-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.8)]' : ''}`}>
-          <div className="p-4 border-b border-slate-700">
+        <div className={`bg-surface border border-outline-variant shadow-sm rounded-lg border border-outline-variant flex flex-col overflow-visible ${isHudActive ? 'relative z-50 ring-4 ring-orange-500/50 shadow-[0_0_20px_rgba(249,115,22,0.8)]' : ''}`}>
+          <div className="p-4 border-b border-outline-variant">
             <h2 className="text-lg font-bold flex items-center gap-2">
-              <Link className="text-blue-500 w-5 h-5" />
+              <Link className="text-primary w-5 h-5" />
               Dispatch Shift
               <div className="relative group ml-auto">
-                <button className="text-slate-500 hover:text-orange-400 transition-colors p-1 rounded-full hover:bg-slate-900">
+                <button className="text-outline hover:text-orange-400 transition-colors p-1 rounded-full hover:bg-background">
                   <HelpCircle className="w-4 h-4" />
                 </button>
-                <div className="absolute left-0 top-full mt-2 w-64 bg-slate-900 border border-slate-700 shadow-2xl rounded-lg p-4 hidden group-hover:block z-50">
+                <div className="absolute left-0 top-full mt-2 w-64 bg-background border border-outline-variant shadow-2xl rounded-lg p-4 hidden group-hover:block z-50">
                   <h4 className="text-orange-400 font-bold mb-2 text-xs uppercase tracking-wider">JIT Ignition Sequence</h4>
-                  <ol className="text-left text-xs text-slate-300 space-y-2">
+                  <ol className="text-left text-xs text-on-surface space-y-2">
                     <li className="flex gap-2"><span className="text-orange-500 font-bold">1.</span> Select open pipeline.</li>
                     <li className="flex gap-2"><span className="text-orange-500 font-bold">2.</span> Assign rested driver.</li>
                     <li className="flex gap-2"><span className="text-orange-500 font-bold">3.</span> Assign capable asset.</li>
@@ -386,9 +386,9 @@ export const FleetDashboard = () => {
           <div className="p-4 flex-1 overflow-y-auto space-y-4">
             
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">1. Active Pipeline</label>
+              <label className="block text-xs font-bold text-on-surface-variant uppercase mb-1">1. Active Pipeline</label>
               <select 
-                className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm"
+                className="w-full bg-background border border-outline-variant rounded p-2 text-foreground text-sm"
                 value={selectedOrder}
                 onChange={e => setSelectedOrder(e.target.value)}
               >
@@ -400,9 +400,9 @@ export const FleetDashboard = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">2. Assign Driver</label>
+              <label className="block text-xs font-bold text-on-surface-variant uppercase mb-1">2. Assign Driver</label>
               <select 
-                className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm font-mono"
+                className="w-full bg-background border border-outline-variant rounded p-2 text-foreground text-sm font-mono"
                 value={selectedDriver}
                 onChange={e => setSelectedDriver(e.target.value)}
               >
@@ -419,9 +419,9 @@ export const FleetDashboard = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-1">3. Assign Asset</label>
+              <label className="block text-xs font-bold text-on-surface-variant uppercase mb-1">3. Assign Asset</label>
               <select 
-                className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white text-sm"
+                className="w-full bg-background border border-outline-variant rounded p-2 text-foreground text-sm"
                 value={selectedAsset}
                 onChange={e => setSelectedAsset(e.target.value)}
               >
@@ -451,15 +451,15 @@ export const FleetDashboard = () => {
         </div>
 
         {/* Column 2: Active Shift Assignments */}
-        <div className="bg-slate-800 rounded-lg border border-slate-700 flex flex-col overflow-visible">
-          <div className="p-4 border-b border-slate-700 flex justify-between items-center">
+        <div className="bg-surface border border-outline-variant shadow-sm rounded-lg border border-outline-variant flex flex-col overflow-visible">
+          <div className="p-4 border-b border-outline-variant flex justify-between items-center">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <Activity className="text-emerald-500 w-5 h-5" />
               Active Auto-Loops
             </h2>
             <button 
               onClick={() => setIsVaultOpen(true)}
-              className="text-xs bg-blue-900/50 hover:bg-blue-600 text-blue-200 font-bold px-3 py-1 rounded transition-colors border border-blue-800"
+              className="text-xs bg-blue-900/50 hover:bg-primary text-on-primary text-blue-200 font-bold px-3 py-1 rounded transition-colors border border-blue-800"
             >
               + Inject Docket
             </button>
@@ -477,17 +477,17 @@ export const FleetDashboard = () => {
               const isDetaching = shift.intent_to_detach === true;
               
               return (
-                <div key={i} className={`p-3 rounded border ${isMIA ? 'bg-red-950/40 border-red-500 animate-pulse' : isDetaching ? 'bg-orange-900/20 border-orange-700' : 'bg-slate-900 border-emerald-900/50'}`}>
+                <div key={i} className={`p-3 rounded border ${isMIA ? 'bg-red-950/40 border-red-500 animate-pulse' : isDetaching ? 'bg-orange-900/20 border-orange-700' : 'bg-background border-emerald-900/50'}`}>
                   <div className="flex justify-between">
                     <span className={`text-xs font-bold uppercase tracking-wider ${isMIA ? 'text-red-500' : isDetaching ? 'text-orange-500 animate-pulse' : 'text-emerald-500'}`}>
                       {isMIA ? 'SIGNAL LOST / M.I.A' : isDetaching ? 'DETACH PENDING' : 'LOOP ACTIVE'}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-mono">{shift.id.substring(0,8)}</span>
+                    <span className="text-[10px] text-outline font-mono">{shift.id?.substring(0,8) || 'N/A'}</span>
                   </div>
-                  <div className="mt-2 text-xs text-slate-300 font-mono space-y-1">
-                    <p>DRV: {shift.driver_id.substring(0,8)}...</p>
-                    <p>AST: {shift.vehicle_id.substring(0,8)}...</p>
-                    <p>PLN: {shift.master_order_id.substring(0,8)}...</p>
+                  <div className="mt-2 text-xs text-on-surface font-mono space-y-1">
+                    <p>DRV: {shift.driver_id?.substring(0,8) || 'N/A'}...</p>
+                    <p>AST: {shift.vehicle_id?.substring(0,8) || 'N/A'}...</p>
+                    <p>PLN: {shift.master_order_id?.substring(0,8) || 'N/A'}...</p>
                   </div>
                   {isMIA && (
                     <div className="mt-2 p-2 bg-red-950 rounded border border-red-900">
@@ -502,7 +502,7 @@ export const FleetDashboard = () => {
                     </div>
                   )}
                   
-                  <div className="mt-3 pt-3 border-t border-slate-700/50">
+                  <div className="mt-3 pt-3 border-t border-outline-variant/50">
                     <button 
                       onClick={() => openSwapModal(shift.driver_id)}
                       className="w-full bg-orange-900/40 hover:bg-orange-600 text-orange-400 hover:text-white font-bold py-1.5 rounded text-xs transition-colors border border-orange-800 flex items-center justify-center gap-2"
@@ -518,7 +518,7 @@ export const FleetDashboard = () => {
               <div className="p-4 bg-orange-900/10 border border-orange-900/30 rounded-lg text-center mt-4">
                 <Truck className="w-10 h-10 text-orange-500/50 mx-auto mb-2" />
                 <h3 className="text-orange-400 font-bold mb-2 uppercase tracking-wider text-xs">No Active Fleet Loops</h3>
-                <ol className="text-left text-[11px] text-slate-500 space-y-1 bg-slate-900/50 p-3 rounded border border-slate-800">
+                <ol className="text-left text-[11px] text-outline space-y-1 bg-background/50 p-3 rounded border border-outline-variant">
                   <li className="flex gap-2"><span className="text-orange-500 font-bold">1.</span> Select an open pipeline.</li>
                   <li className="flex gap-2"><span className="text-orange-500 font-bold">2.</span> Assign a rested driver.</li>
                   <li className="flex gap-2"><span className="text-orange-500 font-bold">3.</span> Assign a capable asset.</li>
@@ -530,8 +530,8 @@ export const FleetDashboard = () => {
         </div>
 
         {/* Column 3: Telemetry Matrix */}
-        <div className="bg-slate-800 rounded-lg border border-slate-700 flex flex-col">
-          <div className="p-4 border-b border-slate-700">
+        <div className="bg-surface border border-outline-variant shadow-sm rounded-lg border border-outline-variant flex flex-col">
+          <div className="p-4 border-b border-outline-variant">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <ShieldAlert className="text-red-500 w-5 h-5" />
               Driver Fatigue State
@@ -541,9 +541,9 @@ export const FleetDashboard = () => {
             {driverFatigue.map((d, i) => {
               const status = getFatigueStatus(d.driver_id);
               return (
-                <div key={i} className={`p-3 rounded flex justify-between items-center border ${status.isCritical ? 'bg-red-900/20 border-red-800' : 'bg-slate-900 border-slate-700'}`}>
+                <div key={i} className={`p-3 rounded flex justify-between items-center border ${status.isCritical ? 'bg-red-900/20 border-red-800' : 'bg-background border-outline-variant'}`}>
                   <div>
-                    <p className="font-mono text-xs text-slate-400 mb-1">UUID: {d.driver_id.substring(0,8)}...</p>
+                    <p className="font-mono text-xs text-on-surface-variant mb-1">UUID: {d.driver_id.substring(0,8)}...</p>
                     <p className={`text-[10px] font-bold ${status.color}`}>{status.label}</p>
                   </div>
                   <div className="text-right">
@@ -552,7 +552,7 @@ export const FleetDashboard = () => {
                 </div>
               )
             })}
-            {driverFatigue.length === 0 && <p className="text-slate-500 italic text-sm">No drivers logged today.</p>}
+            {driverFatigue.length === 0 && <p className="text-outline italic text-sm">No drivers logged today.</p>}
           </div>
         </div>
 
@@ -560,12 +560,12 @@ export const FleetDashboard = () => {
       {/* Swap Driver Modal */}
       {isSwapModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border-2 border-orange-600 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-background border-2 border-orange-600 rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="p-4 border-b border-orange-900/50 flex justify-between items-center bg-orange-950/20">
               <h2 className="text-xl font-bold text-orange-500 flex items-center gap-2">
                 <RefreshCw className="w-5 h-5" /> Tactical Shift Override
               </h2>
-              <button onClick={() => setIsSwapModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsSwapModalOpen(false)} className="text-on-surface-variant hover:text-foreground">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -587,9 +587,9 @@ export const FleetDashboard = () => {
               )}
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Select Reserve Driver</label>
+                <label className="block text-xs font-bold text-on-surface-variant uppercase mb-1">Select Reserve Driver</label>
                 <select 
-                  className="w-full bg-slate-950 border border-slate-700 rounded p-3 text-white text-sm"
+                  className="w-full bg-slate-950 border border-outline-variant rounded p-3 text-foreground text-sm"
                   value={swapReserveDriver}
                   onChange={e => setSwapReserveDriver(e.target.value)}
                 >

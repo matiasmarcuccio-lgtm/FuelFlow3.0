@@ -81,7 +81,7 @@ export default function AssetDetails() {
             </Button>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-                Editar Vehículo: {asset.vehicle_metadata?.nickname || asset.id.substring(0, 8)}
+                Editar Vehicle: {asset.vehicle_metadata?.nickname || asset.id.substring(0, 8)}
               </h1>
               <p className="text-sm text-gray-500 mt-1">VIN: {asset.vehicle_metadata?.vin || 'N/A'}</p>
             </div>

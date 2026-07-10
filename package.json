@@ -14,5 +14,8 @@
   },
   "devDependencies": {
     "turbo": "latest"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.3"
   }
 }

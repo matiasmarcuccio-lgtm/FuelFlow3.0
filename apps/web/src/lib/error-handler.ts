@@ -6,7 +6,7 @@ export const handleDatabaseError = (error: unknown, queryClient?: any) => {
     // Si no es un error de negocio, es un fallo crítico del sistema
     console.error("Fallo técnico no clasificado:", error);
     toast({ 
-      title: "Error Operativo", 
+      title: "Error Operational", 
       description: "El sistema no pudo procesar la solicitud.", 
       variant: "destructive" 
     });

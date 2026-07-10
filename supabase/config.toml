@@ -12,22 +12,21 @@ max_rows = 1000 # Límite de seguridad para evitar consultas masivas accidentale
 port = 5432
 shadow_port = 5433
 
-# [edge_functions] - Deshabilitado temporalmente ya que el CLI actual usa [edge_runtime] o rechaza esta llave global.
-# enabled = true
-# function_timeout_ms = 10000 
+[db.pooler]
+enabled = true
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+
+# Asegurar que pg_net tiene permiso para operar en el background
+[db.settings]
+# shared_preload_libraries = "pg_stat_statements,pg_net"
 
 [realtime]
 enabled = true
-# Comentado por incompatibilidad de CLI
-# max_concurrent_clients = 100
 
 [analytics]
-enabled = true # Crucial para monitorear el rendimiento de tus triggers de auditoría
-
-# Configuración de pg_net para la automatización forense
-[db.pooler]
 enabled = true
-pool_mode = "transaction" 
 
 [functions.webhook-geometry-ingest]
 enabled = true

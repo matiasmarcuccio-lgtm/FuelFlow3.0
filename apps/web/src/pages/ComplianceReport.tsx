@@ -46,13 +46,13 @@ export const ComplianceReport = () => {
   const cultureHealthWarning = resolvedAnomalies.length > 0 && (poorEffortCount / resolvedAnomalies.length) > 0.5;
 
   return (
-    <div className="flex-1 p-8 bg-slate-900 text-slate-200 h-full overflow-y-auto">
+    <div className="flex-1 p-8 bg-background text-foreground h-full overflow-y-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <FileText className="text-slate-400" />
+          <FileText className="text-on-surface-variant" />
           CoR Weekly Summary
         </h1>
-        <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors">
+        <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-foreground px-4 py-2 rounded-md transition-colors">
           <Download className="w-4 h-4" />
           Export PDF
         </button>
@@ -69,47 +69,47 @@ export const ComplianceReport = () => {
       )}
 
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
-          <p className="text-slate-400 text-sm">Total Interventions</p>
-          <p className="text-3xl font-bold text-white">{resolvedAnomalies.length}</p>
+        <div className="bg-surface border border-outline-variant shadow-sm p-4 rounded-lg border border-outline-variant">
+          <p className="text-on-surface-variant text-sm">Total Interventions</p>
+          <p className="text-3xl font-bold text-foreground">{resolvedAnomalies.length}</p>
         </div>
-        <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
-          <p className="text-slate-400 text-sm">Emergency Overrides</p>
+        <div className="bg-surface border border-outline-variant shadow-sm p-4 rounded-lg border border-outline-variant">
+          <p className="text-on-surface-variant text-sm">Emergency Overrides</p>
           <p className="text-3xl font-bold text-purple-400">
             {resolvedAnomalies.filter(a => a.anomaly_flag === 'DRIVER_EMERGENCY_OVERRIDE').length}
           </p>
         </div>
-        <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
-          <p className="text-slate-400 text-sm">Mass Mismatches</p>
+        <div className="bg-surface border border-outline-variant shadow-sm p-4 rounded-lg border border-outline-variant">
+          <p className="text-on-surface-variant text-sm">Mass Mismatches</p>
           <p className="text-3xl font-bold text-red-400">
             {resolvedAnomalies.filter(a => a.anomaly_flag === 'MASS_MISMATCH').length}
           </p>
         </div>
-        <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
-          <p className="text-slate-400 text-sm">Min-Effort Justifications</p>
+        <div className="bg-surface border border-outline-variant shadow-sm p-4 rounded-lg border border-outline-variant">
+          <p className="text-on-surface-variant text-sm">Min-Effort Justifications</p>
           <p className={`text-3xl font-bold ${cultureHealthWarning ? 'text-orange-400' : 'text-emerald-400'}`}>
             {poorEffortCount}
           </p>
         </div>
       </div>
 
-      <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+      <div className="bg-surface border border-outline-variant shadow-sm rounded-lg border border-outline-variant overflow-hidden">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-900 border-b border-slate-700">
-              <th className="p-3 text-sm font-semibold text-slate-300">Timestamp</th>
-              <th className="p-3 text-sm font-semibold text-slate-300">Incident Type</th>
-              <th className="p-3 text-sm font-semibold text-slate-300">Corrective Action Tags</th>
-              <th className="p-3 text-sm font-semibold text-slate-300">Justification (Manager)</th>
-              <th className="p-3 text-sm font-semibold text-slate-300 text-right">Effort Analysis</th>
+            <tr className="bg-background border-b border-outline-variant">
+              <th className="p-3 text-sm font-semibold text-on-surface">Timestamp</th>
+              <th className="p-3 text-sm font-semibold text-on-surface">Incident Type</th>
+              <th className="p-3 text-sm font-semibold text-on-surface">Corrective Action Tags</th>
+              <th className="p-3 text-sm font-semibold text-on-surface">Justification (Manager)</th>
+              <th className="p-3 text-sm font-semibold text-on-surface text-right">Effort Analysis</th>
             </tr>
           </thead>
           <tbody>
             {resolvedAnomalies.map((record) => {
               const effort = calculateEffortScore(record.anomaly_resolution_reason);
               return (
-                <tr key={record.id} className="border-b border-slate-700 hover:bg-slate-700/50">
-                  <td className="p-3 text-xs text-slate-400 font-mono">
+                <tr key={record.id} className="border-b border-outline-variant hover:bg-surface-variant/50">
+                  <td className="p-3 text-xs text-on-surface-variant font-mono">
                     {record.anomaly_resolved_at ? new Date(record.anomaly_resolved_at).toLocaleString() : 'N/A'}
                   </td>
                   <td className="p-3">
@@ -134,11 +134,11 @@ export const ComplianceReport = () => {
                       ))}
                     </div>
                   </td>
-                  <td className="p-3 text-xs text-slate-300 italic">
+                  <td className="p-3 text-xs text-on-surface italic">
                     "{record.anomaly_resolution_reason}"
                   </td>
                   <td className="p-3 text-right">
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded bg-slate-900 border border-slate-700 ${effort.color}`}>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded bg-background border border-outline-variant ${effort.color}`}>
                       {effort.label}
                     </span>
                   </td>
@@ -147,8 +147,8 @@ export const ComplianceReport = () => {
             })}
             {resolvedAnomalies.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-slate-500">
-                  <CheckCircle className="w-8 h-8 mx-auto mb-2 text-slate-600" />
+                <td colSpan={5} className="p-8 text-center text-outline">
+                  <CheckCircle className="w-8 h-8 mx-auto mb-2 text-outline-variant" />
                   No compliance interventions recorded yet.
                 </td>
               </tr>
