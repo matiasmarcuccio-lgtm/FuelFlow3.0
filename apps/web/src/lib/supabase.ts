@@ -1,8 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@fuelflow/shared-types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || '';
+// Eliminamos cualquier '/' al final de la URL para evitar redirecciones 301 que destruyen los headers
+const rawUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseUrl = rawUrl.replace(/\/$/, '');
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+
+// Diagnostic check to alert the user if the key is corrupted or missing
+if (!supabaseAnonKey || supabaseAnonKey.trim() === '' || supabaseAnonKey === 'undefined') {
+  console.error("DIAGNOSTIC: Supabase Anon Key is missing or invalid. Value seen by Vite:", supabaseAnonKey);
+  // We don't alert here to not block the UI constantly, but we can throw a clearer error
+}
 
 // Interceptor JWT para Zonas Ciegas:
 // Si una mutación offline falla por token expirado (401/403) al recuperar la red,
@@ -46,5 +54,9 @@ const customFetch = async (url: RequestInfo | URL, options?: RequestInit) => {
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   global: {
     fetch: customFetch,
+    headers: {
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${supabaseAnonKey}`
+    }
   },
 });
