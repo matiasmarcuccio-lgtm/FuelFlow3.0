@@ -4,9 +4,17 @@ project_id = "fuelflow_core"
 [api]
 enabled = true
 max_rows = 1000 # Límite de seguridad para evitar consultas masivas accidentales
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
 # Comentados por incompatibilidad con el schema local del CLI:
 # db_pool_min = 1
 # db_pool_max = 20
+
+[auth.hook.custom_access_token]
+enabled = true
+uri = "pg-functions://postgres/public/custom_access_token_hook"
 
 [db]
 port = 5432
@@ -16,7 +24,7 @@ shadow_port = 5433
 enabled = true
 port = 54329
 pool_mode = "transaction"
-default_pool_size = 20
+default_pool_size = 100
 
 # Asegurar que pg_net tiene permiso para operar en el background
 [db.settings]
@@ -38,3 +46,31 @@ entrypoint = "./functions/webhook-geometry-ingest/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/webhook-geometry-ingest/*.html" ]
+
+[functions.ocr-auditor]
+enabled = true
+verify_jwt = false
+import_map = "./functions/ocr-auditor/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/ocr-auditor/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/ocr-auditor/*.html" ]
+
+[functions.stripe-webhook]
+enabled = true
+verify_jwt = false
+import_map = "./functions/stripe-webhook/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/stripe-webhook/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/stripe-webhook/*.html" ]
+
+[functions.telemetry-ingest]
+verify_jwt = false
+
+[functions.dispatch-webhook]
+verify_jwt = false

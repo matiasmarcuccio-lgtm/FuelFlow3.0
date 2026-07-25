@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { AlertTriangle, CheckCircle, ShieldAlert } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export interface AnomalyRecord {
   id: string;
-  status: string;
-  anomaly_flag: string;
-  loaded_gross_mass: number;
-  ocr_mass_extracted: number;
-  docket_image_path: string;
-  created_at: string;
-  completed_at_local: string;
+  status: string | null;
+  anomaly_flag: string | null;
+  loaded_gross_mass: number | null;
+  ocr_mass_extracted: number | null;
+  docket_image_path: string | null;
+  created_at: string | null;
+  completed_at_local: string | null;
+  anomaly_resolved_at?: string | null;
 }
 
 const CORRECTIVE_ACTIONS = [

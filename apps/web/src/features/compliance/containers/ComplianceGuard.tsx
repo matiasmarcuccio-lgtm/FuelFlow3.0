@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useComplianceStatus } from '../hooks/useComplianceStatus';
 import { ComplianceScreen } from '../components/ComplianceScreen';
 

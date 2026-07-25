@@ -1,6 +1,6 @@
-import React from 'react';
 
-export const ParkedJITHUD = ({ telemetry }: { telemetry: any }) => {
+
+export const ParkedJITHUD = () => {
     return (
         <div className="w-screen h-screen bg-background flex flex-col items-center justify-center text-foreground">
             <h1 className="text-6xl font-black mb-4">ESTÁS EN POSICIÓN #2</h1>
@@ -8,3 +8,4 @@ export const ParkedJITHUD = ({ telemetry }: { telemetry: any }) => {
         </div>
     );
 };
+

@@ -1,7 +1,7 @@
 import { isFuelFlowError } from '@/types/errors';
 import { toast } from '@/hooks/use-toast';
 
-export const handleDatabaseError = (error: unknown, queryClient?: any) => {
+export const handleDatabaseError = (error: unknown) => {
   if (!isFuelFlowError(error)) {
     // Si no es un error de negocio, es un fallo crítico del sistema
     console.error("Fallo técnico no clasificado:", error);

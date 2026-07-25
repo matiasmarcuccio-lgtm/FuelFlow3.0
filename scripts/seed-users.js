@@ -31,7 +31,19 @@ async function seedUsers() {
     if (error) {
       console.error(`❌ Error creando ${user.email}:`, error.message || error);
     } else {
-      console.log(`✅ Usuario creado: ${user.email} (ID: ${data.user.id})`);
+      // El trigger secure_auth_trigger fuerza a 'driver' a todos los nuevos registros por seguridad.
+      // Como este script se ejecuta con Service Role (máximo privilegio), podemos hacer un UPDATE 
+      // manual en la tabla profiles para sobreescribir el trigger de seguridad y asignar el rol real.
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ role: user.role })
+        .eq('id', data.user.id);
+        
+      if (profileError) {
+         console.error(`⚠️ Identidad creada, pero falló la elevación de privilegios en profiles:`, profileError);
+      } else {
+         console.log(`✅ Usuario creado y elevado a ${user.role}: ${user.email} (ID: ${data.user.id})`);
+      }
     }
   }
 

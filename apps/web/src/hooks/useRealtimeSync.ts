@@ -9,7 +9,7 @@ export function useRealtimeSync() {
     assets: {},
     invalidateProjects: false
   });
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // Función central de drenaje de la Cámara de Amortiguación
@@ -58,8 +58,9 @@ export function useRealtimeSync() {
     intervalRef.current = setInterval(flushBuffer, 3000);
 
     // Escudo Zero-Trust: Sincronización Quirúrgica contra Estampidas
-    const channel = supabase
-      .channel('jit-field-changes')
+    const channelName = `jit-field-changes-${Math.random()}`;
+    const channel = supabase.channel(channelName);
+    channel
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'assets' }, (payload) => {
         const newAsset = payload.new as Asset;
         bufferRef.current.assets[newAsset.id] = newAsset;

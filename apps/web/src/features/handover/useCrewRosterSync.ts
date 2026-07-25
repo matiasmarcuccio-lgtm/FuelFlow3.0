@@ -1,22 +1,44 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { HydrationPayloadSchema } from '../../schemas/core';
 import { set } from 'idb-keyval';
 
 export const useCrewRosterSync = (projectId: string | null) => {
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
   
   return useQuery({
     queryKey: ['crew_hashes', projectId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_project_crew_hashes', { p_project_id: projectId });
-      if (error) throw error;
-      
+      // 1. Fetch Topology from projects table
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('hrcw_polygon, loading_pad_strict, loading_pad_buffered')
+        .eq('id', projectId || '')
+        .single();
+        
+      if (projectError) throw projectError;
+
+      // 2. Fetch Roster from project_members + profiles
+      const { data: rosterData, error: rosterError } = await supabase
+        .from('project_members')
+        .select(`
+          user_id,
+          profiles ( full_name )
+        `)
+        .eq('project_id', projectId || '');
+
+      if (rosterError) throw rosterError;
+
+      const crew = rosterData.map((member: any) => ({
+        user_id: member.user_id,
+        full_name: member.profiles?.full_name || 'Desconocido'
+      }));
+
       // Aduana Zod: Validar integridad del payload
-      const parsedData = HydrationPayloadSchema.parse(data);
+      const payload = { topology: projectData, crew };
+      const parsedData = HydrationPayloadSchema.parse(payload);
 
       // Inyección Asíncrona a Memoria Local (Offline Geometry)
-      // Si la geometría existe, Zod la dejó pasar; extraemos el primer anillo de coordenadas [lng, lat]
       if (parsedData.topology.loading_pad_strict) {
           await set('loading_pad_strict', parsedData.topology.loading_pad_strict.coordinates[0]);
       }
@@ -24,12 +46,8 @@ export const useCrewRosterSync = (projectId: string | null) => {
       if (parsedData.topology.loading_pad_buffered) {
           await set('loading_pad_buffered', parsedData.topology.loading_pad_buffered.coordinates[0]);
       }
-
-      // Ancla temporal: Registra el momento exacto en que hubo señal y se sincronizó.
-      // Si el reloj retrocede en offline, el Handover lo detectará.
-      queryClient.setQueryData(['server_time_anchor', projectId], Date.now());
       
-      return parsedData.crew;
+      return parsedData;
     },
     enabled: !!projectId, 
     staleTime: 1000 * 60 * 60 * 24, // 24 horas, respaldado en idb-keyval

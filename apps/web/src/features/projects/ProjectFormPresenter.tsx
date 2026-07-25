@@ -8,6 +8,7 @@ import { z } from 'zod';
 // We omit ID and created_at for the form inputs
 const ProjectFormSchema = ProjectSchema.omit({ id: true, created_at: true }).extend({
     name: z.string().min(1, 'Project name is required'),
+    status: z.string(),
 });
 type ProjectFormData = z.infer<typeof ProjectFormSchema>;
 

@@ -1,6 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { get } from 'idb-keyval';
 import { useHardwareTelemetry } from './useHardwareTelemetry';
+import { supabase } from '../../lib/supabase';
+import * as turf from '@turf/helpers';
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import { useJoinJitQueue, useLeaveJitQueue, useSubmitPassiveTelemetry } from './mutations';
 
 export type KinematicState = 
   | 'INITIALIZING'
@@ -9,32 +13,16 @@ export type KinematicState =
   | 'HANDOVER'
   | 'FATIGUE_LOCKOUT'
   | 'LOCKOUT'
-  | 'IN_QUEUE'
   | 'SHUTDOWN'
-  | 'IDLE_SAFE';
+  | 'IDLE_SAFE' // EN_RUTA
+  | 'IN_QUEUE'  // EN_COLA_CARGA
+  | 'LOADING'   // CARGANDO
+  | 'HAULING'   // EN_RUTA_CARGADO
+  | 'DUMPING';  // DESCARGANDO
 
-// Algoritmo puro de Ray-Casting para polígonos irregulares (Offline)
-// polygon: array de [lng, lat]
-const isPointInPolygon = (point: {lat: number, lng: number}, polygon: [number, number][]) => {
-    let isInside = false;
-    const x = point.lng, y = point.lat;
-    
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-        const xi = polygon[i][0], yi = polygon[i][1];
-        const xj = polygon[j][0], yj = polygon[j][1];
-        
-        const intersect = ((yi > y) !== (yj > y))
-            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-        if (intersect) isInside = !isInside;
-    }
-    
-    return isInside;
-};
-
-import { supabase } from '../../lib/supabase';
-import * as turf from '@turf/helpers';
-import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
-import { useJoinJitQueue, useLeaveJitQueue, useSubmitPassiveTelemetry } from './mutations';
+const ENTRY_HYSTERESIS = 3000;
+const EXIT_HYSTERESIS = 5000;
+const SPOTTING_SPEED_KMH = 5.0; // Velocidad permisiva para spotting
 
 export const useKioskState = (telemetry: ReturnType<typeof useHardwareTelemetry>, assetId?: string) => {
     const [state, setState] = useState<KinematicState>('INITIALIZING');
@@ -45,11 +33,64 @@ export const useKioskState = (telemetry: ReturnType<typeof useHardwareTelemetry>
     const { mutateAsync: leaveQueue } = useLeaveJitQueue();
     const { mutateAsync: submitPassiveTelemetry } = useSubmitPassiveTelemetry();
 
+    // Referencias para la Histéresis Espacial
+    const lastInsideStrictRef = useRef<number | null>(null);
+    const lastInsideBufferRef = useRef<number | null>(null);
+    const lastOutsideStrictRef = useRef<number | null>(null);
+    const lastOutsideBufferRef = useRef<number | null>(null);
+
+    // Evitar setState en bucle usando ref
+    const stateRef = useRef<KinematicState>('INITIALIZING');
+
+    // Función segura de transición DAG
+    const transitionTo = (newState: KinematicState, triggerAction?: () => void) => {
+        const current = stateRef.current;
+        
+        // Reglas estrictas de mutación (DAG)
+        let isValid = false;
+        
+        switch (current) {
+            case 'IDLE_SAFE': // EN_RUTA
+                isValid = newState === 'IN_QUEUE' || newState === 'LOADING' || newState === 'ACOUSTIC_DRIVING';
+                break;
+            case 'IN_QUEUE':
+                isValid = newState === 'LOADING' || newState === 'IDLE_SAFE' || newState === 'ACOUSTIC_DRIVING';
+                break;
+            case 'LOADING':
+                isValid = newState === 'HAULING'; // Jamás a IDLE_SAFE o IN_QUEUE
+                break;
+            case 'HAULING':
+                isValid = newState === 'DUMPING' || newState === 'ACOUSTIC_DRIVING';
+                break;
+            case 'DUMPING':
+                isValid = newState === 'IDLE_SAFE';
+                break;
+            case 'INITIALIZING':
+            case 'PRE_START':
+            case 'HANDOVER':
+            case 'FATIGUE_LOCKOUT':
+            case 'LOCKOUT':
+            case 'ACOUSTIC_DRIVING':
+                isValid = true; // Estados maestros/bloqueos absolutos pueden transicionar al estado base o viceversa
+                break;
+        }
+
+        // Freno supremo (Siempre válido)
+        if (newState === 'ACOUSTIC_DRIVING' || newState === 'FATIGUE_LOCKOUT' || newState === 'LOCKOUT') {
+            isValid = true;
+        }
+
+        if (isValid) {
+            stateRef.current = newState;
+            setState(newState);
+            if (triggerAction) triggerAction();
+        }
+    };
+
     useEffect(() => {
         let isMounted = true;
 
         const evaluateHierarchy = async () => {
-            // Dispatch pasivo a Layer 0
             if (telemetry.location && assetId) {
                 submitPassiveTelemetry({
                     asset_id: assetId,
@@ -57,24 +98,23 @@ export const useKioskState = (telemetry: ReturnType<typeof useHardwareTelemetry>
                     client_timestamp: new Date().toISOString()
                 }).catch(console.error);
             }
-            // 1. Freno Supremo (Evaluación síncrona en cada tick)
-            if (telemetry.speed > 1.0) {
-                if (isMounted) setState('ACOUSTIC_DRIVING');
+
+            if (telemetry.speed > 30.0) { // Acoustic driving real
+                if (isMounted) transitionTo('ACOUSTIC_DRIVING');
                 return;
+            } else if (stateRef.current === 'ACOUSTIC_DRIVING' && telemetry.speed < 5.0) {
+                transitionTo('IDLE_SAFE'); // Regresar a estado seguro
             }
 
-            // 2. Lectura Asíncrona de la Memoria Legal
             const today = new Date().toISOString().split('T')[0];
             const preStartRecord = await get(`pre_start_${today}`);
             const handoverRecord = await get(`handover_${today}`);
             
-            // Geometrías descargadas desde Supabase durante el Handover (Hidratación)
             let strictPad = await get(`loading_pad_strict`);
             let bufferedPad = await get(`loading_pad_buffered`);
 
             if (!isMounted) return;
 
-            // 3. Jerarquía de Seguridad (Hard Lockouts desde DB)
             if (assetId) {
                 const { data: assetData } = await supabase
                     .from('assets')
@@ -83,29 +123,27 @@ export const useKioskState = (telemetry: ReturnType<typeof useHardwareTelemetry>
                     .single();
 
                 if (assetData?.status === 'out_of_service') {
-                    if (isMounted) setState('LOCKOUT'); // O FITTERS_OVERRIDE
+                    if (isMounted) transitionTo('LOCKOUT');
                     return;
                 }
             }
 
             if (!preStartRecord) {
-                setState('PRE_START');
+                transitionTo('PRE_START');
                 return;
             }
 
             if (!handoverRecord || !handoverRecord.isValid) {
-                setState('HANDOVER');
+                transitionTo('HANDOVER');
                 return;
             }
 
-            // FATIGUE GUARDIAN (Layer 1)
             const hoursElapsed = (Date.now() - handoverRecord.timestamp) / (1000 * 60 * 60);
             if (hoursElapsed >= 11.5) {
-                if (isMounted) setState('FATIGUE_LOCKOUT');
+                if (isMounted) transitionTo('FATIGUE_LOCKOUT');
                 return;
             }
 
-            // 4. Jerarquía Táctica (Offline Turf.js + Spatial Hysteresis)
             if (!strictPad || !bufferedPad) {
                 const HOBART_MIN_LAT = -42.8850, HOBART_MAX_LAT = -42.8840;
                 const HOBART_MIN_LNG = 147.3250, HOBART_MAX_LNG = 147.3260;
@@ -116,7 +154,7 @@ export const useKioskState = (telemetry: ReturnType<typeof useHardwareTelemetry>
                     [HOBART_MAX_LNG, HOBART_MIN_LAT],
                     [HOBART_MAX_LNG, HOBART_MAX_LAT],
                     [HOBART_MIN_LNG, HOBART_MAX_LAT],
-                    [HOBART_MIN_LNG, HOBART_MIN_LAT] // Close polígono
+                    [HOBART_MIN_LNG, HOBART_MIN_LAT]
                 ];
                 
                 bufferedPad = [
@@ -134,39 +172,89 @@ export const useKioskState = (telemetry: ReturnType<typeof useHardwareTelemetry>
                 const strictPoly = turf.polygon([strictPad]);
                 const bufferedPoly = turf.polygon([bufferedPad]);
                 
+                const now = Date.now();
                 const isInsideStrict = booleanPointInPolygon(point, strictPoly);
                 const isInsideBuffer = booleanPointInPolygon(point, bufferedPoly);
-
-                if (state === 'IN_QUEUE') {
-                    if (isInsideBuffer) {
-                        setState('IN_QUEUE');
-                        return;
-                    } else {
-                        // Cambio de estado de salida
-                        if (assetId) {
-                            leaveQueue(assetId).catch(console.error);
-                        }
-                    }
+                
+                // Manejo de Timers (Histéresis Espacial)
+                if (isInsideStrict) {
+                    if (!lastInsideStrictRef.current) lastInsideStrictRef.current = now;
+                    lastOutsideStrictRef.current = null;
                 } else {
-                    if (isInsideStrict) {
-                        setState('IN_QUEUE');
-                        // Cambio de estado de entrada
-                        if (assetId) {
-                            joinQueue(assetId).catch(console.error);
-                        }
+                    if (!lastOutsideStrictRef.current) lastOutsideStrictRef.current = now;
+                    lastInsideStrictRef.current = null;
+                }
+
+                if (isInsideBuffer) {
+                    if (!lastInsideBufferRef.current) lastInsideBufferRef.current = now;
+                    lastOutsideBufferRef.current = null;
+                } else {
+                    if (!lastOutsideBufferRef.current) lastOutsideBufferRef.current = now;
+                    lastInsideBufferRef.current = null;
+                }
+
+                const timeInsideStrict = lastInsideStrictRef.current ? now - lastInsideStrictRef.current : 0;
+                const timeOutsideStrict = lastOutsideStrictRef.current ? now - lastOutsideStrictRef.current : 0;
+                const timeInsideBuffer = lastInsideBufferRef.current ? now - lastInsideBufferRef.current : 0;
+                const timeOutsideBuffer = lastOutsideBufferRef.current ? now - lastOutsideBufferRef.current : 0;
+
+                const isSpeedSpotting = telemetry.speed < SPOTTING_SPEED_KMH;
+
+                // Evaluación del DAG con Histéresis
+                if (stateRef.current === 'INITIALIZING') {
+                    transitionTo('IDLE_SAFE');
+                }
+
+                if (stateRef.current === 'IDLE_SAFE') {
+                    // Transición a LOADING dinámica On-the-Fly
+                    if (isInsideStrict && timeInsideStrict >= ENTRY_HYSTERESIS && isSpeedSpotting) {
+                        transitionTo('LOADING', () => {
+                            if (assetId) joinQueue(assetId).catch(console.error); // Asumir queue subyacente para DB
+                        });
+                        return;
+                    }
+                    // Transición a IN_QUEUE
+                    if (isInsideBuffer && timeInsideBuffer >= ENTRY_HYSTERESIS) {
+                        transitionTo('IN_QUEUE', () => {
+                            if (assetId) joinQueue(assetId).catch(console.error);
+                        });
+                        return;
+                    }
+                }
+
+                if (stateRef.current === 'IN_QUEUE') {
+                    // Spotting a Carga
+                    if (isInsideStrict && timeInsideStrict >= ENTRY_HYSTERESIS && isSpeedSpotting) {
+                        transitionTo('LOADING');
+                        return;
+                    }
+                    // Salida por congestión o abandono
+                    if (!isInsideBuffer && timeOutsideBuffer >= EXIT_HYSTERESIS) {
+                        transitionTo('IDLE_SAFE', () => {
+                            if (assetId) leaveQueue(assetId).catch(console.error);
+                        });
+                        return;
+                    }
+                }
+                
+                if (stateRef.current === 'LOADING') {
+                    // Una vez completada la carga (el equipo decide su salida)
+                    // Transiciona a EN_RUTA_CARGADO. Salida del buffer estricto con tolerancia de histéresis
+                    if (!isInsideStrict && timeOutsideStrict >= EXIT_HYSTERESIS) {
+                        transitionTo('HAULING', () => {
+                            if (assetId) leaveQueue(assetId).catch(console.error);
+                        });
                         return;
                     }
                 }
             }
-
-            // 5. Estado Inerte
-            setState('IDLE_SAFE');
         };
 
         evaluateHierarchy();
 
         return () => { isMounted = false; };
-    }, [telemetry, tick, assetId, joinQueue, leaveQueue]); // Dependencias de Kiosk y Mutations
+    }, [telemetry, tick, assetId, joinQueue, leaveQueue]);
 
     return { sessionState: state, revalidate };
 };
+

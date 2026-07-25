@@ -69,6 +69,151 @@ export type Database = {
           },
         ]
       }
+      asset_assignments: {
+        Row: {
+          asset_id: string
+          assigned_by: string
+          created_at: string | null
+          driver_id: string
+          fatigue_override_reason: string | null
+          fleet_id: string
+          id: string
+          override_approved_by: string | null
+          prestart_commenced_at: string | null
+          shift_end: string | null
+          shift_start: string
+          status: Database["public"]["Enums"]["assignment_status"]
+        }
+        Insert: {
+          asset_id: string
+          assigned_by: string
+          created_at?: string | null
+          driver_id: string
+          fatigue_override_reason?: string | null
+          fleet_id: string
+          id?: string
+          override_approved_by?: string | null
+          prestart_commenced_at?: string | null
+          shift_end?: string | null
+          shift_start?: string
+          status?: Database["public"]["Enums"]["assignment_status"]
+        }
+        Update: {
+          asset_id?: string
+          assigned_by?: string
+          created_at?: string | null
+          driver_id?: string
+          fatigue_override_reason?: string | null
+          fleet_id?: string
+          id?: string
+          override_approved_by?: string | null
+          prestart_commenced_at?: string | null
+          shift_end?: string | null
+          shift_start?: string
+          status?: Database["public"]["Enums"]["assignment_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_assignments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_assignments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "mv_predictive_maintenance_roster"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "asset_assignments_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "view_fleet_matrix"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "asset_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_assignments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_assignments_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asset_assignments_override_approved_by_fkey"
+            columns: ["override_approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asset_lockouts: {
+        Row: {
+          asset_id: string
+          created_at: string | null
+          fleet_id: string
+          id: string
+          locked_by_operator_uid: string
+          lockout_reason: string
+          prestart_log_id: string | null
+          released_at: string | null
+          released_by_fitter_uid: string | null
+          resolution_notes: string | null
+          status: string | null
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string | null
+          fleet_id: string
+          id?: string
+          locked_by_operator_uid: string
+          lockout_reason: string
+          prestart_log_id?: string | null
+          released_at?: string | null
+          released_by_fitter_uid?: string | null
+          resolution_notes?: string | null
+          status?: string | null
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string | null
+          fleet_id?: string
+          id?: string
+          locked_by_operator_uid?: string
+          lockout_reason?: string
+          prestart_log_id?: string | null
+          released_at?: string | null
+          released_by_fitter_uid?: string | null
+          resolution_notes?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_lockouts_prestart_log_id_fkey"
+            columns: ["prestart_log_id"]
+            isOneToOne: false
+            referencedRelation: "whs_prestart_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asset_telemetry_logs: {
         Row: {
           asset_id: string
@@ -99,27 +244,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "asset_telemetry_logs_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "asset_telemetry_logs_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "hrcw_dead_node_violations"
-            referencedColumns: ["asset_id"]
-          },
-          {
-            foreignKeyName: "asset_telemetry_logs_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "live_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "asset_telemetry_logs_recorded_by_fkey"
             columns: ["recorded_by"]
             isOneToOne: false
@@ -130,60 +254,63 @@ export type Database = {
       }
       assets: {
         Row: {
-          asset_code: string
-          asset_type: string
-          created_at: string | null
-          current_project_id: string | null
-          fleet_manager_id: string
+          baseline_burn_rate_lph: number | null
+          category: Database["public"]["Enums"]["asset_category"]
+          current_engine_hours: number | null
+          current_odometer: number | null
+          fleet_id: string
+          hopper_capacity_m3: number | null
           id: string
-          is_compliant: boolean | null
-          last_known_location: Json | null
-          last_odometer_checkin: number | null
-          last_telemetry_timestamp: string | null
-          registration_number: string
-          status: string | null
+          internal_code: string
+          last_prestart_at: string | null
+          last_prestart_by_uid: string | null
+          required_license_id: string
+          status: Database["public"]["Enums"]["asset_status"]
+          updated_at: string | null
         }
         Insert: {
-          asset_code: string
-          asset_type: string
-          created_at?: string | null
-          current_project_id?: string | null
-          fleet_manager_id: string
+          baseline_burn_rate_lph?: number | null
+          category: Database["public"]["Enums"]["asset_category"]
+          current_engine_hours?: number | null
+          current_odometer?: number | null
+          fleet_id: string
+          hopper_capacity_m3?: number | null
           id?: string
-          is_compliant?: boolean | null
-          last_known_location?: Json | null
-          last_odometer_checkin?: number | null
-          last_telemetry_timestamp?: string | null
-          registration_number: string
-          status?: string | null
+          internal_code: string
+          last_prestart_at?: string | null
+          last_prestart_by_uid?: string | null
+          required_license_id: string
+          status?: Database["public"]["Enums"]["asset_status"]
+          updated_at?: string | null
         }
         Update: {
-          asset_code?: string
-          asset_type?: string
-          created_at?: string | null
-          current_project_id?: string | null
-          fleet_manager_id?: string
+          baseline_burn_rate_lph?: number | null
+          category?: Database["public"]["Enums"]["asset_category"]
+          current_engine_hours?: number | null
+          current_odometer?: number | null
+          fleet_id?: string
+          hopper_capacity_m3?: number | null
           id?: string
-          is_compliant?: boolean | null
-          last_known_location?: Json | null
-          last_odometer_checkin?: number | null
-          last_telemetry_timestamp?: string | null
-          registration_number?: string
-          status?: string | null
+          internal_code?: string
+          last_prestart_at?: string | null
+          last_prestart_by_uid?: string | null
+          required_license_id?: string
+          status?: Database["public"]["Enums"]["asset_status"]
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "assets_current_project_id_fkey"
-            columns: ["current_project_id"]
+            foreignKeyName: "assets_fleet_id_fkey"
+            columns: ["fleet_id"]
             isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "fleets"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "assets_fleet_manager_id_fkey"
-            columns: ["fleet_manager_id"]
+            foreignKeyName: "assets_required_license_id_fkey"
+            columns: ["required_license_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "license_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -221,6 +348,111 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "view_cor_audit_timeline"
             referencedColumns: ["load_id"]
+          },
+        ]
+      }
+      billing_contracts: {
+        Row: {
+          asset_id: string
+          currency: string | null
+          erp_contact_id: string | null
+          hourly_rate_asset: number
+          hourly_rate_operator: number | null
+          id: string
+          is_active: boolean | null
+          model: Database["public"]["Enums"]["hire_model_type"]
+          overtime_multiplier: number | null
+          overtime_threshold_hours: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          asset_id: string
+          currency?: string | null
+          erp_contact_id?: string | null
+          hourly_rate_asset: number
+          hourly_rate_operator?: number | null
+          id?: string
+          is_active?: boolean | null
+          model: Database["public"]["Enums"]["hire_model_type"]
+          overtime_multiplier?: number | null
+          overtime_threshold_hours?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          asset_id?: string
+          currency?: string | null
+          erp_contact_id?: string | null
+          hourly_rate_asset?: number
+          hourly_rate_operator?: number | null
+          id?: string
+          is_active?: boolean | null
+          model?: Database["public"]["Enums"]["hire_model_type"]
+          overtime_multiplier?: number | null
+          overtime_threshold_hours?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_contracts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: true
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "billing_contracts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: true
+            referencedRelation: "mv_predictive_maintenance_roster"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "billing_contracts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: true
+            referencedRelation: "view_fleet_matrix"
+            referencedColumns: ["vehicle_id"]
+          },
+        ]
+      }
+      billing_ledger: {
+        Row: {
+          amount_aud: number
+          created_at: string | null
+          executed_by_uid: string
+          fleet_id: string
+          id: string
+          payment_method: string | null
+          status: string | null
+          stripe_charge_id: string
+        }
+        Insert: {
+          amount_aud: number
+          created_at?: string | null
+          executed_by_uid: string
+          fleet_id: string
+          id?: string
+          payment_method?: string | null
+          status?: string | null
+          stripe_charge_id: string
+        }
+        Update: {
+          amount_aud?: number
+          created_at?: string | null
+          executed_by_uid?: string
+          fleet_id?: string
+          id?: string
+          payment_method?: string | null
+          status?: string | null
+          stripe_charge_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_ledger_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -392,6 +624,33 @@ export type Database = {
           },
         ]
       }
+      dead_letter_queue: {
+        Row: {
+          event_type: string
+          failed_at: string | null
+          id: string
+          last_error: string | null
+          original_event_id: string
+          payload: Json
+        }
+        Insert: {
+          event_type: string
+          failed_at?: string | null
+          id?: string
+          last_error?: string | null
+          original_event_id: string
+          payload: Json
+        }
+        Update: {
+          event_type?: string
+          failed_at?: string | null
+          id?: string
+          last_error?: string | null
+          original_event_id?: string
+          payload?: Json
+        }
+        Relationships: []
+      }
       driver_fatigue_evidence: {
         Row: {
           evidence_hash: string
@@ -446,6 +705,92 @@ export type Database = {
           },
         ]
       }
+      driver_licenses: {
+        Row: {
+          created_at: string | null
+          driver_id: string
+          expiry_date: string
+          id: string
+          issued_date: string
+          license_category_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id: string
+          expiry_date: string
+          id?: string
+          issued_date: string
+          license_category_id: string
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string
+          expiry_date?: string
+          id?: string
+          issued_date?: string
+          license_category_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_licenses_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_licenses_license_category_id_fkey"
+            columns: ["license_category_id"]
+            isOneToOne: false
+            referencedRelation: "license_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      erp_outbox: {
+        Row: {
+          certificate_id: string | null
+          created_at: string | null
+          id: string
+          last_error: string | null
+          next_retry_at: string | null
+          payload: Json
+          retry_count: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          certificate_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_error?: string | null
+          next_retry_at?: string | null
+          payload: Json
+          retry_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          certificate_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_error?: string | null
+          next_retry_at?: string | null
+          payload?: Json
+          retry_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "erp_outbox_certificate_id_fkey"
+            columns: ["certificate_id"]
+            isOneToOne: true
+            referencedRelation: "execution_certificates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       excavator_states: {
         Row: {
           asset_id: string
@@ -468,26 +813,135 @@ export type Database = {
           operational_status?: Database["public"]["Enums"]["excavator_status"]
           updated_at?: string
         }
+        Relationships: []
+      }
+      execution_certificates: {
+        Row: {
+          asset_subtotal: number
+          assignment_id: string
+          billed_to_erp_id: string | null
+          contract_id: string
+          forensic_pdf_hash: string | null
+          forensic_pdf_url: string | null
+          generated_at: string
+          hardware_engine_hours: number | null
+          id: string
+          operator_subtotal: number
+          overtime_hours: number
+          regular_hours: number
+          sync_status: string | null
+          telemetry_confidence: number
+          telemetry_source: string
+          total_billable: number
+          total_hours: number
+        }
+        Insert: {
+          asset_subtotal: number
+          assignment_id: string
+          billed_to_erp_id?: string | null
+          contract_id: string
+          forensic_pdf_hash?: string | null
+          forensic_pdf_url?: string | null
+          generated_at?: string
+          hardware_engine_hours?: number | null
+          id?: string
+          operator_subtotal: number
+          overtime_hours: number
+          regular_hours: number
+          sync_status?: string | null
+          telemetry_confidence?: number
+          telemetry_source?: string
+          total_billable: number
+          total_hours: number
+        }
+        Update: {
+          asset_subtotal?: number
+          assignment_id?: string
+          billed_to_erp_id?: string | null
+          contract_id?: string
+          forensic_pdf_hash?: string | null
+          forensic_pdf_url?: string | null
+          generated_at?: string
+          hardware_engine_hours?: number | null
+          id?: string
+          operator_subtotal?: number
+          overtime_hours?: number
+          regular_hours?: number
+          sync_status?: string | null
+          telemetry_confidence?: number
+          telemetry_source?: string
+          total_billable?: number
+          total_hours?: number
+        }
         Relationships: [
           {
-            foreignKeyName: "excavator_states_asset_id_fkey"
-            columns: ["asset_id"]
+            foreignKeyName: "execution_certificates_assignment_id_fkey"
+            columns: ["assignment_id"]
             isOneToOne: true
-            referencedRelation: "assets"
+            referencedRelation: "asset_assignments"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "excavator_states_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: true
-            referencedRelation: "hrcw_dead_node_violations"
-            referencedColumns: ["asset_id"]
+            foreignKeyName: "execution_certificates_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "billing_contracts"
+            referencedColumns: ["id"]
           },
+        ]
+      }
+      expense_quarantine: {
+        Row: {
+          created_at: string | null
+          driver_uid: string
+          expense_category: string | null
+          extracted_amount: number | null
+          extracted_vendor: string | null
+          id: string
+          ocr_confidence: number | null
+          raw_image_url: string
+          review_notes: string | null
+          reviewed_by_uid: string | null
+          shift_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_uid: string
+          expense_category?: string | null
+          extracted_amount?: number | null
+          extracted_vendor?: string | null
+          id?: string
+          ocr_confidence?: number | null
+          raw_image_url: string
+          review_notes?: string | null
+          reviewed_by_uid?: string | null
+          shift_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_uid?: string
+          expense_category?: string | null
+          extracted_amount?: number | null
+          extracted_vendor?: string | null
+          id?: string
+          ocr_confidence?: number | null
+          raw_image_url?: string
+          review_notes?: string | null
+          reviewed_by_uid?: string | null
+          shift_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "excavator_states_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: true
-            referencedRelation: "live_fleet_status"
+            foreignKeyName: "expense_quarantine_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "asset_assignments"
             referencedColumns: ["id"]
           },
         ]
@@ -563,38 +1017,172 @@ export type Database = {
       }
       fleet_invites: {
         Row: {
+          consumed_at: string | null
+          consumed_by_uid: string | null
           created_at: string | null
           created_by: string
           expires_at: string
           fleet_id: string
           id: string
-          invite_token: string
-          is_consumed: boolean
+          role: string | null
+          token: string
         }
         Insert: {
+          consumed_at?: string | null
+          consumed_by_uid?: string | null
           created_at?: string | null
           created_by: string
           expires_at?: string
           fleet_id: string
           id?: string
-          invite_token: string
-          is_consumed?: boolean
+          role?: string | null
+          token: string
         }
         Update: {
+          consumed_at?: string | null
+          consumed_by_uid?: string | null
           created_at?: string | null
           created_by?: string
           expires_at?: string
           fleet_id?: string
           id?: string
-          invite_token?: string
-          is_consumed?: boolean
+          role?: string | null
+          token?: string
         }
         Relationships: [
           {
             foreignKeyName: "fleet_invites_fleet_id_fkey"
             columns: ["fleet_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fleets: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          trial_end_date: string | null
+          trial_start_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          trial_end_date?: string | null
+          trial_start_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      fuel_logs: {
+        Row: {
+          asset_id: string
+          burn_rate_lph: number
+          cost_per_liter: number
+          created_at: string | null
+          engine_hours_at_fill: number
+          fleet_id: string
+          haul_cycles_since_last_fill: number
+          hours_elapsed: number
+          id: string
+          liters_filled: number
+          notes: string | null
+          operator_uid: string
+          previous_engine_hours: number
+          shift_id: string | null
+          status: string
+          tonnage_moved_since_last_fill: number
+          total_cost: number
+        }
+        Insert: {
+          asset_id: string
+          burn_rate_lph: number
+          cost_per_liter?: number
+          created_at?: string | null
+          engine_hours_at_fill: number
+          fleet_id: string
+          haul_cycles_since_last_fill?: number
+          hours_elapsed: number
+          id?: string
+          liters_filled: number
+          notes?: string | null
+          operator_uid: string
+          previous_engine_hours: number
+          shift_id?: string | null
+          status: string
+          tonnage_moved_since_last_fill?: number
+          total_cost: number
+        }
+        Update: {
+          asset_id?: string
+          burn_rate_lph?: number
+          cost_per_liter?: number
+          created_at?: string | null
+          engine_hours_at_fill?: number
+          fleet_id?: string
+          haul_cycles_since_last_fill?: number
+          hours_elapsed?: number
+          id?: string
+          liters_filled?: number
+          notes?: string | null
+          operator_uid?: string
+          previous_engine_hours?: number
+          shift_id?: string | null
+          status?: string
+          tonnage_moved_since_last_fill?: number
+          total_cost?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fuel_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fuel_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "mv_predictive_maintenance_roster"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "fuel_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "view_fleet_matrix"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "fuel_logs_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_logs"
             referencedColumns: ["id"]
           },
         ]
@@ -633,6 +1221,100 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      haul_cycles: {
+        Row: {
+          asset_id: string
+          completed_at: string | null
+          cycle_duration_seconds: number | null
+          dumped_at: string | null
+          fleet_id: string
+          id: string
+          loaded_at: string | null
+          material_id: string | null
+          operator_uid: string
+          route_id: string | null
+          shift_id: string
+          started_at: string
+          state: string
+          tonnage_moved: number | null
+        }
+        Insert: {
+          asset_id: string
+          completed_at?: string | null
+          cycle_duration_seconds?: number | null
+          dumped_at?: string | null
+          fleet_id: string
+          id?: string
+          loaded_at?: string | null
+          material_id?: string | null
+          operator_uid: string
+          route_id?: string | null
+          shift_id: string
+          started_at?: string
+          state: string
+          tonnage_moved?: number | null
+        }
+        Update: {
+          asset_id?: string
+          completed_at?: string | null
+          cycle_duration_seconds?: number | null
+          dumped_at?: string | null
+          fleet_id?: string
+          id?: string
+          loaded_at?: string | null
+          material_id?: string | null
+          operator_uid?: string
+          route_id?: string | null
+          shift_id?: string
+          started_at?: string
+          state?: string
+          tonnage_moved?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "haul_cycles_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "haul_cycles_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "mv_predictive_maintenance_roster"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "haul_cycles_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "view_fleet_matrix"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "haul_cycles_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "haul_cycles_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "haul_cycles_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "shift_logs"
             referencedColumns: ["id"]
           },
         ]
@@ -715,27 +1397,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "jit_active_queues_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "jit_active_queues_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "hrcw_dead_node_violations"
-            referencedColumns: ["asset_id"]
-          },
-          {
-            foreignKeyName: "jit_active_queues_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "live_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "jit_active_queues_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -743,6 +1404,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      license_categories: {
+        Row: {
+          code: string
+          description: string
+          id: string
+        }
+        Insert: {
+          code: string
+          description: string
+          id?: string
+        }
+        Update: {
+          code?: string
+          description?: string
+          id?: string
+        }
+        Relationships: []
       }
       load_cycles: {
         Row: {
@@ -803,27 +1482,6 @@ export type Database = {
           weighbridge_operator_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "load_cycles_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "load_cycles_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "hrcw_dead_node_violations"
-            referencedColumns: ["asset_id"]
-          },
-          {
-            foreignKeyName: "load_cycles_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "live_fleet_status"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "load_cycles_driver_id_fkey"
             columns: ["driver_id"]
@@ -961,6 +1619,64 @@ export type Database = {
           },
         ]
       }
+      maintenance_logs: {
+        Row: {
+          asset_id: string
+          id: string
+          issue_description: string
+          locked_at: string
+          locked_by_uid: string | null
+          released_at: string | null
+          released_by_uid: string | null
+          resolution_notes: string | null
+          status: Database["public"]["Enums"]["maintenance_status"]
+        }
+        Insert: {
+          asset_id: string
+          id?: string
+          issue_description: string
+          locked_at?: string
+          locked_by_uid?: string | null
+          released_at?: string | null
+          released_by_uid?: string | null
+          resolution_notes?: string | null
+          status?: Database["public"]["Enums"]["maintenance_status"]
+        }
+        Update: {
+          asset_id?: string
+          id?: string
+          issue_description?: string
+          locked_at?: string
+          locked_by_uid?: string | null
+          released_at?: string | null
+          released_by_uid?: string | null
+          resolution_notes?: string | null
+          status?: Database["public"]["Enums"]["maintenance_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "mv_predictive_maintenance_roster"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "maintenance_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "view_fleet_matrix"
+            referencedColumns: ["vehicle_id"]
+          },
+        ]
+      }
       maintenance_schedules: {
         Row: {
           asset_id: string
@@ -1033,6 +1749,33 @@ export type Database = {
         }
         Relationships: []
       }
+      materials: {
+        Row: {
+          created_at: string | null
+          density_kg_m3: number
+          fleet_id: string
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          density_kg_m3: number
+          fleet_id: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          density_kg_m3?: number
+          fleet_id?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
       nhvr_compliance_logs: {
         Row: {
           asset_id: string
@@ -1099,6 +1842,50 @@ export type Database = {
         }
         Relationships: []
       }
+      ocr_audit_logs: {
+        Row: {
+          created_at: string | null
+          detected_document_type: string | null
+          detected_expiry_date: string | null
+          id: string
+          is_fraud_flagged: boolean
+          ocr_confidence_score: number | null
+          override_id: string
+          raw_ocr_dump: Json | null
+          vision_model_version: string
+        }
+        Insert: {
+          created_at?: string | null
+          detected_document_type?: string | null
+          detected_expiry_date?: string | null
+          id?: string
+          is_fraud_flagged?: boolean
+          ocr_confidence_score?: number | null
+          override_id: string
+          raw_ocr_dump?: Json | null
+          vision_model_version: string
+        }
+        Update: {
+          created_at?: string | null
+          detected_document_type?: string | null
+          detected_expiry_date?: string | null
+          id?: string
+          is_fraud_flagged?: boolean
+          ocr_confidence_score?: number | null
+          override_id?: string
+          raw_ocr_dump?: Json | null
+          vision_model_version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocr_audit_logs_override_id_fkey"
+            columns: ["override_id"]
+            isOneToOne: false
+            referencedRelation: "whs_overrides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plant_defects: {
         Row: {
           asset_id: string
@@ -1147,27 +1934,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "plant_defects_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "plant_defects_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "hrcw_dead_node_violations"
-            referencedColumns: ["asset_id"]
-          },
-          {
-            foreignKeyName: "plant_defects_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "live_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "plant_defects_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
@@ -1190,6 +1956,53 @@ export type Database = {
           },
         ]
       }
+      prestart_checks: {
+        Row: {
+          assignment_id: string
+          brakes_checked: boolean
+          defect_notes: string | null
+          fluids_checked: boolean
+          id: string
+          inspection_completed_at: string
+          inspection_started_at: string
+          is_safe_to_operate: boolean
+          operator_id: string
+          structural_checked: boolean
+        }
+        Insert: {
+          assignment_id: string
+          brakes_checked?: boolean
+          defect_notes?: string | null
+          fluids_checked?: boolean
+          id?: string
+          inspection_completed_at?: string
+          inspection_started_at: string
+          is_safe_to_operate: boolean
+          operator_id: string
+          structural_checked?: boolean
+        }
+        Update: {
+          assignment_id?: string
+          brakes_checked?: boolean
+          defect_notes?: string | null
+          fluids_checked?: boolean
+          id?: string
+          inspection_completed_at?: string
+          inspection_started_at?: string
+          is_safe_to_operate?: boolean
+          operator_id?: string
+          structural_checked?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prestart_checks_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "asset_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -1202,6 +2015,9 @@ export type Database = {
           is_verified: boolean | null
           operational_pin_hash: string | null
           operational_pin_salt: string | null
+          pin_failed_attempts: number | null
+          pin_hash: string | null
+          pin_locked_until: string | null
           role: string
           status: string | null
           updated_at: string | null
@@ -1218,6 +2034,9 @@ export type Database = {
           is_verified?: boolean | null
           operational_pin_hash?: string | null
           operational_pin_salt?: string | null
+          pin_failed_attempts?: number | null
+          pin_hash?: string | null
+          pin_locked_until?: string | null
           role: string
           status?: string | null
           updated_at?: string | null
@@ -1233,11 +2052,22 @@ export type Database = {
           is_verified?: boolean | null
           operational_pin_hash?: string | null
           operational_pin_salt?: string | null
+          pin_failed_attempts?: number | null
+          pin_hash?: string | null
+          pin_locked_until?: string | null
           role?: string
           status?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_profiles_fleet_id"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_members: {
         Row: {
@@ -1304,6 +2134,72 @@ export type Database = {
           project_type?: string | null
           start_date?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      role_audit_logs: {
+        Row: {
+          action_type: string | null
+          granted_at: string | null
+          granted_by_user_id: string
+          id: string
+          justification: string
+          new_role: string
+          previous_role: string
+          target_user_id: string
+        }
+        Insert: {
+          action_type?: string | null
+          granted_at?: string | null
+          granted_by_user_id: string
+          id?: string
+          justification: string
+          new_role: string
+          previous_role: string
+          target_user_id: string
+        }
+        Update: {
+          action_type?: string | null
+          granted_at?: string | null
+          granted_by_user_id?: string
+          id?: string
+          justification?: string
+          new_role?: string
+          previous_role?: string
+          target_user_id?: string
+        }
+        Relationships: []
+      }
+      routes: {
+        Row: {
+          created_at: string | null
+          destination_zone: string
+          est_duration_minutes: number | null
+          fleet_id: string
+          id: string
+          is_active: boolean | null
+          name: string
+          origin_zone: string
+        }
+        Insert: {
+          created_at?: string | null
+          destination_zone: string
+          est_duration_minutes?: number | null
+          fleet_id: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          origin_zone: string
+        }
+        Update: {
+          created_at?: string | null
+          destination_zone?: string
+          est_duration_minutes?: number | null
+          fleet_id?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          origin_zone?: string
         }
         Relationships: []
       }
@@ -1392,6 +2288,73 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "master_orders"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_logs: {
+        Row: {
+          accumulated_break_seconds: number
+          accumulated_work_seconds: number
+          asset_id: string | null
+          continuous_work_seconds: number
+          created_at: string | null
+          ended_at: string | null
+          fleet_id: string
+          id: string
+          last_state_change_at: string
+          operator_uid: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          accumulated_break_seconds?: number
+          accumulated_work_seconds?: number
+          asset_id?: string | null
+          continuous_work_seconds?: number
+          created_at?: string | null
+          ended_at?: string | null
+          fleet_id: string
+          id?: string
+          last_state_change_at?: string
+          operator_uid: string
+          started_at?: string
+          status: string
+        }
+        Update: {
+          accumulated_break_seconds?: number
+          accumulated_work_seconds?: number
+          asset_id?: string | null
+          continuous_work_seconds?: number
+          created_at?: string | null
+          ended_at?: string | null
+          fleet_id?: string
+          id?: string
+          last_state_change_at?: string
+          operator_uid?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "mv_predictive_maintenance_roster"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "shift_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "view_fleet_matrix"
+            referencedColumns: ["vehicle_id"]
           },
         ]
       }
@@ -1511,6 +2474,45 @@ export type Database = {
           },
         ]
       }
+      system_audit_logs: {
+        Row: {
+          action_type: string
+          actor_role: string | null
+          actor_uid: string | null
+          client_ip: string | null
+          created_at: string | null
+          id: string
+          payload_after: Json | null
+          payload_before: Json | null
+          target_record_id: string | null
+          target_table: string
+        }
+        Insert: {
+          action_type: string
+          actor_role?: string | null
+          actor_uid?: string | null
+          client_ip?: string | null
+          created_at?: string | null
+          id?: string
+          payload_after?: Json | null
+          payload_before?: Json | null
+          target_record_id?: string | null
+          target_table: string
+        }
+        Update: {
+          action_type?: string
+          actor_role?: string | null
+          actor_uid?: string | null
+          client_ip?: string | null
+          created_at?: string | null
+          id?: string
+          payload_after?: Json | null
+          payload_before?: Json | null
+          target_record_id?: string | null
+          target_table?: string
+        }
+        Relationships: []
+      }
       system_config: {
         Row: {
           key: string
@@ -1592,32 +2594,66 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "telemetry_inbox_asset_id_fkey"
+            foreignKeyName: "telemetry_inbox_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      telemetry_logs: {
+        Row: {
+          asset_id: string
+          coolant_temp_celsius: number | null
+          created_at: string | null
+          engine_hours: number
+          fuel_level_percent: number | null
+          id: string
+          is_engine_running: boolean
+          recorded_at: string
+        }
+        Insert: {
+          asset_id: string
+          coolant_temp_celsius?: number | null
+          created_at?: string | null
+          engine_hours: number
+          fuel_level_percent?: number | null
+          id?: string
+          is_engine_running?: boolean
+          recorded_at?: string
+        }
+        Update: {
+          asset_id?: string
+          coolant_temp_celsius?: number | null
+          created_at?: string | null
+          engine_hours?: number
+          fuel_level_percent?: number | null
+          id?: string
+          is_engine_running?: boolean
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "telemetry_logs_asset_id_fkey"
             columns: ["asset_id"]
             isOneToOne: false
             referencedRelation: "assets"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "telemetry_inbox_asset_id_fkey"
+            foreignKeyName: "telemetry_logs_asset_id_fkey"
             columns: ["asset_id"]
             isOneToOne: false
-            referencedRelation: "hrcw_dead_node_violations"
+            referencedRelation: "mv_predictive_maintenance_roster"
             referencedColumns: ["asset_id"]
           },
           {
-            foreignKeyName: "telemetry_inbox_asset_id_fkey"
+            foreignKeyName: "telemetry_logs_asset_id_fkey"
             columns: ["asset_id"]
             isOneToOne: false
-            referencedRelation: "live_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "telemetry_inbox_recorded_by_fkey"
-            columns: ["recorded_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: "view_fleet_matrix"
+            referencedColumns: ["vehicle_id"]
           },
         ]
       }
@@ -1748,29 +2784,241 @@ export type Database = {
           },
         ]
       }
+      webhook_endpoints: {
+        Row: {
+          auth_secret: string | null
+          created_at: string | null
+          event_type: string
+          fleet_id: string
+          id: string
+          is_active: boolean | null
+          target_url: string
+        }
+        Insert: {
+          auth_secret?: string | null
+          created_at?: string | null
+          event_type: string
+          fleet_id: string
+          id?: string
+          is_active?: boolean | null
+          target_url: string
+        }
+        Update: {
+          auth_secret?: string | null
+          created_at?: string | null
+          event_type?: string
+          fleet_id?: string
+          id?: string
+          is_active?: boolean | null
+          target_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoints_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_events: {
         Row: {
           created_at: string | null
+          error_message: string | null
           event_type: string
           id: string
+          next_retry_at: string | null
           payload: Json
+          request_id: number | null
+          retry_count: number | null
           status: string | null
         }
         Insert: {
           created_at?: string | null
+          error_message?: string | null
           event_type: string
           id?: string
+          next_retry_at?: string | null
           payload?: Json
+          request_id?: number | null
+          retry_count?: number | null
           status?: string | null
         }
         Update: {
           created_at?: string | null
+          error_message?: string | null
           event_type?: string
           id?: string
+          next_retry_at?: string | null
           payload?: Json
+          request_id?: number | null
+          retry_count?: number | null
           status?: string | null
         }
         Relationships: []
+      }
+      whs_overrides: {
+        Row: {
+          document_path: string
+          driver_id: string
+          id: string
+          new_expiry_date: string
+          override_timestamp: string | null
+          supervisor_id: string
+        }
+        Insert: {
+          document_path: string
+          driver_id: string
+          id?: string
+          new_expiry_date: string
+          override_timestamp?: string | null
+          supervisor_id: string
+        }
+        Update: {
+          document_path?: string
+          driver_id?: string
+          id?: string
+          new_expiry_date?: string
+          override_timestamp?: string | null
+          supervisor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whs_overrides_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whs_overrides_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whs_prestart_logs: {
+        Row: {
+          asset_id: string
+          checklist_data: Json
+          client_timestamp: string
+          defect_notes: Json | null
+          fleet_id: string
+          id: string
+          operator_uid: string
+          passed: boolean
+          server_timestamp: string | null
+        }
+        Insert: {
+          asset_id: string
+          checklist_data: Json
+          client_timestamp: string
+          defect_notes?: Json | null
+          fleet_id: string
+          id?: string
+          operator_uid: string
+          passed: boolean
+          server_timestamp?: string | null
+        }
+        Update: {
+          asset_id?: string
+          checklist_data?: Json
+          client_timestamp?: string
+          defect_notes?: Json | null
+          fleet_id?: string
+          id?: string
+          operator_uid?: string
+          passed?: boolean
+          server_timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whs_prestart_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whs_prestart_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "mv_predictive_maintenance_roster"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "whs_prestart_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "view_fleet_matrix"
+            referencedColumns: ["vehicle_id"]
+          },
+        ]
+      }
+      whs_prestarts: {
+        Row: {
+          asset_id: string
+          checklist_data: Json
+          client_timestamp: string
+          created_at: string | null
+          defect_notes: Json | null
+          id: string
+          operator_id: string
+          passed: boolean
+        }
+        Insert: {
+          asset_id: string
+          checklist_data: Json
+          client_timestamp: string
+          created_at?: string | null
+          defect_notes?: Json | null
+          id?: string
+          operator_id: string
+          passed: boolean
+        }
+        Update: {
+          asset_id?: string
+          checklist_data?: Json
+          client_timestamp?: string
+          created_at?: string | null
+          defect_notes?: Json | null
+          id?: string
+          operator_id?: string
+          passed?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whs_prestarts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whs_prestarts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "mv_predictive_maintenance_roster"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "whs_prestarts_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "view_fleet_matrix"
+            referencedColumns: ["vehicle_id"]
+          },
+          {
+            foreignKeyName: "whs_prestarts_operator_id_fkey"
+            columns: ["operator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1816,80 +3064,41 @@ export type Database = {
         }
         Relationships: []
       }
-      hrcw_dead_node_violations: {
+      mv_ato_fuel_rebate_ledger: {
         Row: {
           asset_id: string | null
-          current_project_id: string | null
-          last_event_type: string | null
-          last_known_location: Json | null
-          last_telemetry_timestamp: string | null
-        }
-        Insert: {
-          asset_id?: string | null
-          current_project_id?: string | null
-          last_event_type?: never
-          last_known_location?: Json | null
-          last_telemetry_timestamp?: string | null
-        }
-        Update: {
-          asset_id?: string | null
-          current_project_id?: string | null
-          last_event_type?: never
-          last_known_location?: Json | null
-          last_telemetry_timestamp?: string | null
+          asset_name: string | null
+          asset_type: Database["public"]["Enums"]["asset_category"] | null
+          avg_burn_rate_lph: number | null
+          estimated_ato_rebate_aud: number | null
+          fleet_id: string | null
+          last_refuel_timestamp: string | null
+          total_aud_spent: number | null
+          total_liters_injected: number | null
+          total_refuels: number | null
+          total_tonnage_associated: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "assets_current_project_id_fkey"
-            columns: ["current_project_id"]
+            foreignKeyName: "fuel_logs_asset_id_fkey"
+            columns: ["asset_id"]
             isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      live_fleet_status: {
-        Row: {
-          current_project_id: string | null
-          effective_status: string | null
-          fleet_manager_id: string | null
-          id: string | null
-          last_known_location: Json | null
-          last_telemetry_timestamp: string | null
-          raw_status: string | null
-        }
-        Insert: {
-          current_project_id?: string | null
-          effective_status?: never
-          fleet_manager_id?: string | null
-          id?: string | null
-          last_known_location?: Json | null
-          last_telemetry_timestamp?: string | null
-          raw_status?: string | null
-        }
-        Update: {
-          current_project_id?: string | null
-          effective_status?: never
-          fleet_manager_id?: string | null
-          id?: string | null
-          last_known_location?: Json | null
-          last_telemetry_timestamp?: string | null
-          raw_status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "assets_current_project_id_fkey"
-            columns: ["current_project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "assets"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "assets_fleet_manager_id_fkey"
-            columns: ["fleet_manager_id"]
+            foreignKeyName: "fuel_logs_asset_id_fkey"
+            columns: ["asset_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedRelation: "mv_predictive_maintenance_roster"
+            referencedColumns: ["asset_id"]
+          },
+          {
+            foreignKeyName: "fuel_logs_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: false
+            referencedRelation: "view_fleet_matrix"
+            referencedColumns: ["vehicle_id"]
           },
         ]
       }
@@ -1902,27 +3111,6 @@ export type Database = {
           total_cycles: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "load_cycles_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "load_cycles_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "hrcw_dead_node_violations"
-            referencedColumns: ["asset_id"]
-          },
-          {
-            foreignKeyName: "load_cycles_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "live_fleet_status"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "load_cycles_project_id_fkey"
             columns: ["project_id"]
@@ -1941,27 +3129,6 @@ export type Database = {
           total_downtime_hours: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "plant_defects_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "plant_defects_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "hrcw_dead_node_violations"
-            referencedColumns: ["asset_id"]
-          },
-          {
-            foreignKeyName: "plant_defects_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "live_fleet_status"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "plant_defects_project_id_fkey"
             columns: ["project_id"]
@@ -1990,6 +3157,40 @@ export type Database = {
           },
         ]
       }
+      mv_predictive_maintenance_roster: {
+        Row: {
+          active_danger_tags_count: number | null
+          asset_id: string | null
+          asset_name: string | null
+          current_engine_hours: number | null
+          current_whs_status: Database["public"]["Enums"]["asset_status"] | null
+          fleet_id: string | null
+          hours_until_next_service: number | null
+          maintenance_priority: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assets_fleet_id_fkey"
+            columns: ["fleet_id"]
+            isOneToOne: false
+            referencedRelation: "fleets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mv_whs_compliance_audit: {
+        Row: {
+          avg_continuous_drive_hours: number | null
+          fatigue_lockouts_triggered: number | null
+          fleet_id: string | null
+          last_shift_start: string | null
+          operator_name: string | null
+          operator_uid: string | null
+          total_shifts_worked: number | null
+          total_work_hours: number | null
+        }
+        Relationships: []
+      }
       secure_daily_cycle_efficiency: {
         Row: {
           asset_id: string | null
@@ -1999,27 +3200,6 @@ export type Database = {
           total_cycles: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "load_cycles_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "load_cycles_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "hrcw_dead_node_violations"
-            referencedColumns: ["asset_id"]
-          },
-          {
-            foreignKeyName: "load_cycles_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "live_fleet_status"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "load_cycles_project_id_fkey"
             columns: ["project_id"]
@@ -2038,27 +3218,6 @@ export type Database = {
           total_downtime_hours: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "plant_defects_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "plant_defects_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "hrcw_dead_node_violations"
-            referencedColumns: ["asset_id"]
-          },
-          {
-            foreignKeyName: "plant_defects_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: false
-            referencedRelation: "live_fleet_status"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "plant_defects_project_id_fkey"
             columns: ["project_id"]
@@ -2111,6 +3270,24 @@ export type Database = {
           hours_active: number | null
           shift_start: string | null
           trips_today: number | null
+        }
+        Relationships: []
+      }
+      view_fleet_matrix: {
+        Row: {
+          registration_number: string | null
+          status: Database["public"]["Enums"]["asset_status"] | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          registration_number?: string | null
+          status?: Database["public"]["Enums"]["asset_status"] | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          registration_number?: string | null
+          status?: Database["public"]["Enums"]["asset_status"] | null
+          vehicle_id?: string | null
         }
         Relationships: []
       }
@@ -2263,6 +3440,30 @@ export type Database = {
             }
             Returns: string
           }
+      audit_the_ocr_auditor: { Args: never; Returns: undefined }
+      calculate_fleet_health_scores: {
+        Args: { p_fleet_id: string }
+        Returns: {
+          asset_id: string
+          critical_warnings: number
+          health_score: number
+          internal_code: string
+          predicted_failure_days: number
+        }[]
+      }
+      certify_prestart: {
+        Args: {
+          p_assignment_id: string
+          p_brakes: boolean
+          p_defect_notes: string
+          p_fluids: boolean
+          p_is_safe: boolean
+          p_structural: boolean
+        }
+        Returns: undefined
+      }
+      close_active_shift: { Args: { p_assignment_id: string }; Returns: Json }
+      custom_access_token_hook: { Args: { event: Json }; Returns: Json }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {
@@ -2295,11 +3496,27 @@ export type Database = {
         | { Args: { schema_name: string; table_name: string }; Returns: string }
         | { Args: { table_name: string }; Returns: string }
       earth: { Args: never; Returns: number }
+      emergency_reset_mfa: {
+        Args: { p_target_uid: string }
+        Returns: undefined
+      }
       enablelongtransactions: { Args: never; Returns: string }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
       exclusion_zone_geojson: {
         Args: { offer: Database["public"]["Tables"]["load_offers"]["Row"] }
         Returns: Json
+      }
+      execute_instant_revocation: {
+        Args: { p_forensic_reason: string; p_target_uid: string }
+        Returns: Json
+      }
+      fitter_lock_asset: {
+        Args: { p_asset_id: string; p_issue: string }
+        Returns: string
+      }
+      fitter_release_asset: {
+        Args: { p_log_id: string; p_resolution: string }
+        Returns: undefined
       }
       fn_assign_asset_to_project: {
         Args: {
@@ -2309,7 +3526,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      fn_consume_fleet_invite: { Args: { p_token: string }; Returns: boolean }
+      fn_consume_fleet_invite: { Args: { p_token: string }; Returns: Json }
       fn_dispatch_shift: {
         Args: {
           p_asset_id: string
@@ -2318,10 +3535,36 @@ export type Database = {
         }
         Returns: string
       }
+      fn_elevate_user_role: {
+        Args: {
+          p_justification: string
+          p_new_role: string
+          p_target_id: string
+        }
+        Returns: string
+      }
+      fn_execute_haul_transition: {
+        Args: {
+          p_action: string
+          p_asset_id: string
+          p_material_id?: string
+          p_route_id?: string
+        }
+        Returns: Json
+      }
+      fn_execute_shift_action: {
+        Args: { p_action: string; p_asset_id?: string }
+        Returns: Json
+      }
+      fn_export_regulatory_report: {
+        Args: { p_report_type: string }
+        Returns: Json
+      }
       fn_generate_fleet_invite: {
         Args: { p_fleet_id: string }
         Returns: string
       }
+      fn_get_caller_fleet_id: { Args: never; Returns: string }
       fn_inject_retroactive_docket: {
         Args: {
           p_docket_image_path: string
@@ -2332,9 +3575,21 @@ export type Database = {
         }
         Returns: string
       }
+      fn_override_pin_lockout: {
+        Args: { p_target_operator_uid: string }
+        Returns: Json
+      }
       fn_override_shift_assignment: {
         Args: { p_absent_driver_id: string; p_reserve_driver_id: string }
         Returns: boolean
+      }
+      fn_release_asset_lockout: {
+        Args: {
+          p_asset_id: string
+          p_fitter_pin: string
+          p_resolution_notes: string
+        }
+        Returns: Json
       }
       fn_request_detach:
         | { Args: { p_reason: string }; Returns: undefined }
@@ -2343,7 +3598,64 @@ export type Database = {
         Args: { p_driver_id: string }
         Returns: boolean
       }
+      fn_revoke_user_role: {
+        Args: {
+          p_justification: string
+          p_new_role: string
+          p_target_id: string
+        }
+        Returns: string
+      }
+      fn_set_operator_pin: { Args: { p_pin: string }; Returns: Json }
+      fn_simulate_payment_success: {
+        Args: { p_amount_due: number; p_fleet_id: string }
+        Returns: Json
+      }
+      fn_submit_fuel_log:
+        | {
+            Args: {
+              p_asset_id: string
+              p_cost_per_liter?: number
+              p_engine_hours: number
+              p_liters_filled: number
+              p_location_tag?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_asset_id: string
+              p_cost_per_liter?: number
+              p_engine_hours: number
+              p_liters_filled: number
+              p_notes?: string
+            }
+            Returns: Json
+          }
+      fn_submit_whs_prestart: {
+        Args: {
+          p_asset_id: string
+          p_checklist_data: Json
+          p_client_timestamp: string
+          p_defect_notes: Json
+          p_passed: boolean
+        }
+        Returns: Json
+      }
       fn_sweep_orphan_evidence: { Args: never; Returns: undefined }
+      fn_verify_driver_insurance: {
+        Args: {
+          p_driver_id: string
+          p_expiry_date: string
+          p_file_path: string
+        }
+        Returns: boolean
+      }
+      fn_verify_operator_pin: { Args: { p_pin: string }; Returns: Json }
+      force_close_shift: {
+        Args: { p_assignment_id: string; p_reason: string }
+        Returns: undefined
+      }
       geometry: { Args: { "": string }; Returns: unknown }
       geometry_above: {
         Args: { geom1: unknown; geom2: unknown }
@@ -2450,6 +3762,12 @@ export type Database = {
           projected_mrr: number
         }[]
       }
+      get_auth_user_fleet_id: { Args: never; Returns: string }
+      get_auth_user_role: { Args: never; Returns: string }
+      get_fleet_friction_metrics: {
+        Args: { p_fleet_id: string }
+        Returns: Json
+      }
       get_offer_chronology: {
         Args: { offer_uuid: string }
         Returns: {
@@ -2467,7 +3785,6 @@ export type Database = {
           isSetofReturn: true
         }
       }
-      get_project_crew_hashes: { Args: { p_project_id: string }; Returns: Json }
       gettransactionid: { Args: never; Returns: unknown }
       insurance_compliant: {
         Args: { "": Database["public"]["Tables"]["profiles"]["Row"] }
@@ -2477,7 +3794,15 @@ export type Database = {
       }
       join_jit_queue: { Args: { p_asset_id: string }; Returns: undefined }
       leave_jit_queue: { Args: { p_asset_id: string }; Returns: undefined }
+      lock_asset_preventively: {
+        Args: { p_asset_id: string; p_reason: string }
+        Returns: undefined
+      }
       longtransactionsenabled: { Args: never; Returns: boolean }
+      mark_prestart_commenced: {
+        Args: { p_assignment_id: string }
+        Returns: undefined
+      }
       matches_contractor_profile: {
         Args: { driver_uuid: string; offer_id: string }
         Returns: boolean
@@ -2522,6 +3847,16 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      process_quarantined_expense: {
+        Args: {
+          p_corrected_amount: number
+          p_expense_id: string
+          p_notes: string
+          p_status: string
+        }
+        Returns: undefined
+      }
+      process_webhook_responses: { Args: never; Returns: undefined }
       reconcile_load_cycle: {
         Args: {
           p_cycle_id: string
@@ -2531,6 +3866,10 @@ export type Database = {
         Returns: Json
       }
       refresh_managerial_kpis: { Args: never; Returns: undefined }
+      release_asset_from_maintenance: {
+        Args: { p_asset_id: string; p_release_notes: string }
+        Returns: undefined
+      }
       report_incident: {
         Args: {
           p_description: string
@@ -2548,6 +3887,14 @@ export type Database = {
           p_resolution_notes: string
         }
         Returns: Json
+      }
+      resurrect_dead_letter: {
+        Args: { p_outbox_id: string }
+        Returns: undefined
+      }
+      revoke_pending_shift: {
+        Args: { p_assignment_id: string; p_reason: string }
+        Returns: undefined
       }
       seed_test_trip: { Args: never; Returns: undefined }
       st_3dclosestpoint: {
@@ -3164,6 +4511,25 @@ export type Database = {
       }
     }
     Enums: {
+      asset_category:
+        | "heavy_machinery"
+        | "light_vehicle"
+        | "static_plant"
+        | "HAUL_TRUCK"
+      asset_status:
+        | "operational"
+        | "maintenance"
+        | "decommissioned"
+        | "AVAILABLE"
+        | "DISPATCHED"
+        | "OUT_OF_SERVICE"
+      assignment_status:
+        | "active"
+        | "completed"
+        | "cancelled"
+        | "pending_prestart"
+        | "in_progress"
+        | "revoked"
       cycle_status: "loading" | "in_transit" | "dumped" | "reconciled"
       defect_category:
         | "hydraulic"
@@ -3177,6 +4543,15 @@ export type Database = {
         | "relocating"
         | "rock_breaking"
         | "standby"
+      hire_model_type: "dry_hire" | "wet_hire"
+      maintenance_status: "in_progress" | "resolved"
+      subscription_status:
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "canceled"
+        | "suspended"
+      subscription_tier: "tier_1" | "tier_2" | "tier_3"
       user_role:
         | "contractor"
         | "operator"
@@ -3321,6 +4696,28 @@ export const Constants = {
   },
   public: {
     Enums: {
+      asset_category: [
+        "heavy_machinery",
+        "light_vehicle",
+        "static_plant",
+        "HAUL_TRUCK",
+      ],
+      asset_status: [
+        "operational",
+        "maintenance",
+        "decommissioned",
+        "AVAILABLE",
+        "DISPATCHED",
+        "OUT_OF_SERVICE",
+      ],
+      assignment_status: [
+        "active",
+        "completed",
+        "cancelled",
+        "pending_prestart",
+        "in_progress",
+        "revoked",
+      ],
       cycle_status: ["loading", "in_transit", "dumped", "reconciled"],
       defect_category: [
         "hydraulic",
@@ -3336,6 +4733,16 @@ export const Constants = {
         "rock_breaking",
         "standby",
       ],
+      hire_model_type: ["dry_hire", "wet_hire"],
+      maintenance_status: ["in_progress", "resolved"],
+      subscription_status: [
+        "trialing",
+        "active",
+        "past_due",
+        "canceled",
+        "suspended",
+      ],
+      subscription_tier: ["tier_1", "tier_2", "tier_3"],
       user_role: [
         "contractor",
         "operator",

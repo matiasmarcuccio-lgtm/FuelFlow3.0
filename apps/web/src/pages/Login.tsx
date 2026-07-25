@@ -2,15 +2,19 @@ import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Key, Eye, EyeOff, AlertCircle, ArrowRight, IdCard } from 'lucide-react';
+import { Shield, Eye, EyeOff, ShieldAlert, Lock, Mail, ArrowRight } from 'lucide-react';
 
 export default function Login() {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  if (authLoading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground font-mono uppercase tracking-widest text-sm">Verificando Credenciales...</div>;
+  }
 
   if (session) {
     return <Navigate to="/" replace />;
@@ -33,125 +37,140 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-[#f8f9fc] relative overflow-hidden font-sans">
-      {/* Background Dotted Pattern */}
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12 text-foreground relative overflow-hidden">
+      
+      {/* Background Dotted Pattern (Subtle) */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-40" 
-        style={{ backgroundImage: 'radial-gradient(#cbd5e1 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }}
+        className="absolute inset-0 pointer-events-none opacity-20 dark:opacity-10" 
+        style={{ backgroundImage: 'radial-gradient(currentColor 1.5px, transparent 1.5px)', backgroundSize: '24px 24px' }}
       ></div>
 
-      {/* Main Content Container */}
-      <div className="z-10 w-full max-w-md px-6 pt-12 pb-16 flex flex-col h-full">
-        
-        {/* Header Logo */}
-        <div className="mb-12">
-          <h1 className="text-2xl font-extrabold text-blue-800 tracking-tight">JITSite</h1>
-        </div>
-
-        {/* Titles */}
-        <div className="relative mb-10 text-center">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-8xl font-black text-slate-100 -z-10 select-none tracking-tighter">
-            FF3.0
+      <div className="z-10 w-full max-w-md flex flex-col items-center">
+        {/* Header / Brand */}
+        <div className="w-full mb-10 flex items-center justify-center gap-3">
+          <div className="p-2 bg-primary rounded-md shadow-lg shadow-primary/20">
+            <Shield className="text-primary-foreground w-6 h-6" />
           </div>
-          <h2 className="text-3xl font-extrabold text-slate-900 mb-3">Secure Access</h2>
-          <p className="text-slate-500 text-sm leading-relaxed px-4 max-w-sm mx-auto">
-            Enterprise-grade authentication for industrial management operations.
-          </p>
+          <h1 className="text-3xl font-extrabold tracking-tighter uppercase text-foreground">JITSite</h1>
         </div>
 
-        {/* Auth Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative z-10 w-full">
+        {/* Main Authentication Card */}
+        <div className="w-full bg-card border border-border rounded-xl p-8 shadow-xl glass-panel relative overflow-hidden">
           
-          {/* Top Encrypted Bar */}
-          <div className="bg-[#0b5cff] px-5 py-2.5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-white" />
-              <span className="text-white text-xs font-bold tracking-widest">SYSTEM: ENCRYPTED</span>
+          <header className="mb-8">
+            <h2 className="text-2xl font-bold tracking-tight mb-2">Secure Access</h2>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Enterprise-grade authentication for industrial management operations.
+            </p>
+          </header>
+
+          {/* MFA Warning Notification */}
+          <div className="mb-6 flex gap-3 p-4 bg-muted/50 border-l-4 border-primary rounded-r-md">
+            <ShieldAlert className="w-5 h-5 flex-shrink-0 mt-0.5 text-primary" />
+            <div className="text-xs text-muted-foreground">
+              <span className="font-bold block uppercase tracking-wider mb-1 text-foreground">MFA Protocol Active</span>
+              Hardware keys (FIDO2) or authenticator tokens required for node connection.
             </div>
-            <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
           </div>
 
-          <form onSubmit={handleLogin} className="p-6 sm:p-8 flex flex-col gap-6">
+          <form onSubmit={handleLogin} className="space-y-6">
             
             {/* Email Field */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <IdCard className="w-4 h-4 text-slate-500" />
-                <label className="text-sm font-bold text-slate-600">Corporate ID or Email</label>
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                Corporate Email or ID
+              </label>
+              <div className="relative group">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. FS-4492-AX"
+                  className="w-full pl-10 pr-4 py-3 bg-background border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-sm font-medium"
+                />
               </div>
-              <input
-                type="email"
-                value={email}
-                required
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. FS-4492-AX"
-                className="w-full bg-[#f0f4f8] border border-slate-200 rounded-xl px-4 py-3.5 text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-600/50 focus:border-blue-600 transition-all font-medium"
-              />
             </div>
 
             {/* Password Field */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Key className="w-4 h-4 text-slate-500" />
-                  <label className="text-sm font-bold text-slate-600">Password</label>
-                </div>
-                <Link to="#" className="text-sm font-bold text-[#0b5cff] hover:underline">
-                  Forgot Access Key?
-                </Link>
-              </div>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  required
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full bg-[#f0f4f8] border border-slate-200 rounded-xl px-4 py-3.5 pr-12 text-slate-900 placeholder:text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600/50 focus:border-blue-600 transition-all font-mono tracking-widest font-bold"
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            <div className="space-y-2">
+              <div className="flex justify-between items-end">
+                <label htmlFor="password" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Access Key
+                </label>
+                <button type="button" className="text-[10px] font-bold text-primary hover:underline tracking-tight">
+                  FORGOT KEY?
                 </button>
               </div>
-            </div>
-
-            {/* MFA Warning */}
-            <div className="bg-[#eef2ff] border-l-4 border-[#0b5cff] rounded-r-xl p-4 flex gap-3 mt-1">
-              <div className="bg-[#0b5cff] w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-white text-xs font-black">!</span>
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-[#0b5cff] mb-1">MFA REQUIRED</h4>
-                <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                  Hardware security keys (FIDO2) or mobile authenticator tokens are mandatory for node connection.
-                </p>
+              <div className="relative group">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full pl-10 pr-12 py-3 bg-background border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-sm font-mono tracking-widest font-bold"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
             {/* Error Message */}
             {errorMsg && (
-              <div className="bg-red-50 text-red-600 text-sm font-bold p-3 rounded-xl border border-red-200 text-center">
+              <div className="bg-destructive/10 text-destructive text-xs font-bold p-3 rounded border border-destructive/20 text-center">
                 {errorMsg}
               </div>
             )}
 
             {/* Submit Button */}
-            <button 
-              type="submit" 
-              disabled={loading} 
-              className="w-full bg-[#0047b3] hover:bg-[#003380] text-white rounded-xl py-4 flex items-center justify-center gap-2 font-bold text-lg transition-colors mt-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-blue-900/20"
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full py-4 bg-primary text-primary-foreground font-bold uppercase tracking-widest text-xs rounded-md hover:bg-primary/90 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-lg ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              {loading ? 'Authenticating...' : 'Initiate Connection'}
-              {!loading && <ArrowRight className="w-5 h-5" />}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                <>
+                  Initiate Connection
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
-
           </form>
+
+          <footer className="mt-8 pt-6 border-t border-border text-center">
+            <p className="text-[11px] text-muted-foreground">
+              Unrecognized Node? <Link to="/register" className="font-bold text-primary hover:underline">Provision Hardware</Link>
+            </p>
+          </footer>
         </div>
 
+        {/* System Footer Metadata */}
+        <div className="mt-8 w-full max-w-sm flex justify-between items-center text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+            System Uptime: 99.9%
+          </div>
+          <div>V4.12.0_STABLE</div>
+        </div>
       </div>
     </div>
   );

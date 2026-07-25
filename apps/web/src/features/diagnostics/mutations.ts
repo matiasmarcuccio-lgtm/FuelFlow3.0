@@ -21,7 +21,6 @@ export const useResolvePlantDefect = () => {
         p_defect_id: payload.defectId,
         p_category: payload.category,
         p_resolution_notes: payload.resolutionNotes,
-        p_mechanic_id: payload.mechanicId,
         p_mechanic_pin: payload.mechanicPin
       });
 

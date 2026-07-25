@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Activity, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useSubmitTelemetry } from '../features/assets/mutations';
 import { get } from 'idb-keyval';
@@ -40,13 +40,13 @@ export const HealthDashboard = () => {
 
   return (
     <div className="flex-1 p-8 bg-background text-foreground">
-      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
-        <Activity className="text-emerald-500" />
-        Health Dashboard
+      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2 text-foreground">
+        <Activity className="text-primary" />
+        Financial intelligence
       </h1>
       <p className="text-on-surface-variant mb-8">Monitor system latency, stale sync events, and database triggers here.</p>
       
-      <div className="bg-surface border border-outline-variant shadow-sm p-6 rounded-lg border border-outline-variant">
+      <div className="bg-card shadow-lg p-6 rounded-lg">
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <AlertTriangle className="text-yellow-500" />
           Offline-First Mutaton Queue Test

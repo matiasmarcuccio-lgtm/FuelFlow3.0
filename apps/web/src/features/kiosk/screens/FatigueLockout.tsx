@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { ShieldAlert } from 'lucide-react';
 
 export const FatigueLockout = () => {

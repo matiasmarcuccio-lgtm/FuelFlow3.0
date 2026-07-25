@@ -1,8 +1,7 @@
-import React from 'react';
+
 import { Navigate } from 'react-router-dom';
 import type { UserProjectRole } from '../hooks/useUserRole';
 import { AppLayout } from './layout/AppLayout';
-import { KinematicKiosk } from '../features/kiosk/KinematicKiosk';
 import { ShieldCheck } from 'lucide-react';
 
 import { TollgateContainer } from '../features/tollgate/TollgateContainer';
@@ -12,11 +11,12 @@ import { DiagnosticsContainer } from '../features/diagnostics/DiagnosticsContain
 export const RoleBasedRouter = ({ activeRole }: { activeRole: UserProjectRole }) => {
     const { role, project_id } = activeRole;
 
-    switch (role) {
+    switch (role as any) {
+        case 'super_admin':
+        case 'fleet_manager':
         case 'supervisor':
         case 'site_manager':
         case 'lead_supervisor':
-            // El supervisor accede al Command Center completo
             return <AppLayout />;
             
         case 'weighbridge':
@@ -25,11 +25,11 @@ export const RoleBasedRouter = ({ activeRole }: { activeRole: UserProjectRole })
             
         case 'fitter':
         case 'heavy_mechanic':
-            // El mecánico de planta entra al escáner de red tags
+            // El mecánico de planta entra al Tablero de Triaje Ciego (The Pit & The Wrench)
             return <DiagnosticsContainer projectId={project_id} />;
             
         case 'operator':
-            // El maquinista va directo al escáner QR para tomar posesión de una máquina
+            // El maquinista se identifica (Handover) en la tablet anclada por MDM a su máquina
             return <Navigate to={`/scan`} replace />;
             
         default:
@@ -42,3 +42,4 @@ export const RoleBasedRouter = ({ activeRole }: { activeRole: UserProjectRole })
             );
     }
 };
+

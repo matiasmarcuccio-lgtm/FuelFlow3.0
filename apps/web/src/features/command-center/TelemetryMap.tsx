@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from '../../lib/supabase';
@@ -7,8 +7,8 @@ interface TelemetryNode {
   id: string;
   lat: number;
   lng: number;
-  status: string;
-  anomaly_flag?: string;
+  status: string | null;
+  anomaly_flag?: string | null;
   contractor_id: string;
 }
 
@@ -71,7 +71,7 @@ export const TelemetryMap = () => {
       
       {nodes.map(node => {
         const hasAnomaly = !!node.anomaly_flag;
-        const color = getColor(node.status, hasAnomaly);
+        const color = getColor(node.status || '', hasAnomaly);
         
         return (
           <CircleMarker
@@ -98,3 +98,4 @@ export const TelemetryMap = () => {
     </MapContainer>
   );
 };
+

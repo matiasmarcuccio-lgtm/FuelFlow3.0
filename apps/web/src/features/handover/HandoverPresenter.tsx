@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ShieldAlert, Signal, SignalZero, CheckCircle2, PowerOff } from 'lucide-react';
 
 interface HandoverPresenterProps {

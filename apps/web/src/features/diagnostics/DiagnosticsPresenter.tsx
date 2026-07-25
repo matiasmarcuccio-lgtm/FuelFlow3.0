@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { ActiveDefect } from './queries';
-import { Wrench, AlertOctagon, Lock, Clock, BatteryWarning, Zap, Droplets, GaugeCircle, ShieldCheck } from 'lucide-react';
+import { Wrench, AlertOctagon, Lock, Clock, Zap, Droplets, GaugeCircle, ShieldCheck } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 
 type DefectCategory = 'hydraulic' | 'electrical' | 'engine' | 'wear_and_tear' | 'false_alarm';
@@ -85,8 +85,8 @@ export const DiagnosticsPresenter = ({ defects, onResolve }: DiagnosticsPresente
                             return (
                                 <button
                                     key={defect.id}
-                                    onClick={() => { setSelectedDefectId(defect.id); setSelectedCategory(null); setPinStr(''); }}
-                                    className={`w-full text-left p-5 rounded-xl border-2 transition-all relative overflow-hidden ${
+                                    onPointerDown={(e) => { e.preventDefault(); setSelectedDefectId(defect.id); setSelectedCategory(null); setPinStr(''); }}
+                                    className={`w-full min-h-[80px] text-left p-5 rounded-xl border-2 transition-all relative overflow-hidden ${
                                         isSelected 
                                             ? 'border-red-500 bg-red-950/40 shadow-[0_0_20px_rgba(239,68,68,0.2)]' 
                                             : 'border-red-900/30 bg-red-950/10 hover:border-red-500/50 hover:bg-red-950/20'
@@ -138,16 +138,16 @@ export const DiagnosticsPresenter = ({ defects, onResolve }: DiagnosticsPresente
                     <div className="flex-1 p-8 flex flex-col items-center justify-center">
                         
                         {!selectedCategory ? (
-                            <div className="w-full max-w-3xl animate-in fade-in zoom-in duration-300">
+                            <div className="w-full h-[60%] max-w-3xl animate-in fade-in zoom-in duration-300 flex flex-col">
                                 <h3 className="text-center text-on-surface-variant font-bold uppercase tracking-widest mb-8 text-xl">Seleccione Causa Raíz</h3>
-                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className="grid gap-6 flex-1" style={{ gridTemplateRows: 'repeat(auto-fit, minmax(80px, 1fr))', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))' }}>
                                     {CATEGORIES.map(cat => {
                                         const Icon = cat.icon;
                                         return (
                                             <button
                                                 key={cat.id}
-                                                onClick={() => setSelectedCategory(cat.id)}
-                                                className={`h-40 rounded-2xl border-2 flex flex-col items-center justify-center gap-4 transition-all active:scale-95 bg-background ${cat.color}`}
+                                                onPointerDown={(e) => { e.preventDefault(); setSelectedCategory(cat.id); }}
+                                                className={`rounded-2xl border-2 flex flex-col items-center justify-center gap-4 transition-all active:scale-95 bg-background ${cat.color} min-h-[80px]`}
                                             >
                                                 <Icon className="w-12 h-12" />
                                                 <span className="text-lg font-bold uppercase tracking-wider">{cat.label}</span>
@@ -159,8 +159,8 @@ export const DiagnosticsPresenter = ({ defects, onResolve }: DiagnosticsPresente
                         ) : (
                             <div className="w-full max-w-sm animate-in slide-in-from-right duration-300">
                                 <button 
-                                    onClick={() => setSelectedCategory(null)}
-                                    className="text-outline hover:text-foreground mb-6 uppercase text-sm font-bold tracking-widest flex items-center gap-2 transition-colors"
+                                    onPointerDown={(e) => { e.preventDefault(); setSelectedCategory(null); }}
+                                    className="text-outline hover:text-foreground mb-6 uppercase text-sm font-bold tracking-widest flex items-center gap-2 transition-colors min-h-[48px] px-2"
                                 >
                                     ← Cambiar Categoría
                                 </button>
@@ -185,9 +185,9 @@ export const DiagnosticsPresenter = ({ defects, onResolve }: DiagnosticsPresente
                                                 return (
                                                     <button
                                                         key={key}
-                                                        onClick={handleUnlock}
+                                                        onPointerDown={(e) => { e.preventDefault(); handleUnlock(); }}
                                                         disabled={pinStr.length < 4}
-                                                        className="h-20 rounded-2xl text-2xl font-bold flex items-center justify-center transition-all active:scale-95 bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 disabled:bg-surface border border-outline-variant shadow-sm border-none shadow-[0_0_15px_rgba(5,150,105,0.3)] disabled:shadow-none"
+                                                        className="min-h-[80px] min-w-[80px] h-20 rounded-2xl text-2xl font-bold flex items-center justify-center transition-all active:scale-95 bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 disabled:bg-surface border border-outline-variant shadow-sm border-none shadow-[0_0_15px_rgba(5,150,105,0.3)] disabled:shadow-none"
                                                     >
                                                         {key}
                                                     </button>
@@ -196,8 +196,8 @@ export const DiagnosticsPresenter = ({ defects, onResolve }: DiagnosticsPresente
                                             return (
                                                 <button
                                                     key={key}
-                                                    onClick={() => handleKeypadPress(key)}
-                                                    className={`h-20 rounded-2xl text-3xl font-mono font-bold flex items-center justify-center transition-all active:scale-95 ${
+                                                    onPointerDown={(e) => { e.preventDefault(); handleKeypadPress(key); }}
+                                                    className={`min-h-[80px] min-w-[80px] h-20 rounded-2xl text-3xl font-mono font-bold flex items-center justify-center transition-all active:scale-95 ${
                                                         key === 'C' 
                                                             ? 'bg-red-950/50 text-red-500 border border-red-900/50 hover:bg-red-900/50' 
                                                             : 'bg-surface border border-outline-variant shadow-sm text-white border border-outline-variant hover:bg-surface-variant hover:border-outline'

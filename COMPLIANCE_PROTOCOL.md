@@ -30,3 +30,12 @@ Cierre Auditado: Cada entrega finaliza con una declaración jurada digital firma
 
 6. Transparencia y Auditoría
 Todos los registros en FuelFlow son Append-Only (solo inserción) para la tabla de manifiestos (cor_manifests), proporcionando un historial inmutable que puede presentarse ante investigadores de la NHVR en caso de un incidente de tráfico.
+
+7. Protocolo de Lázaro (Disaster Recovery)
+FuelFlow asume que el caos operativo y tecnológico ocurrirá, y dicta medidas estrictas de supervivencia:
+
+Rescate Biométrico (MFA Lockout): Si un operador pierde su dispositivo MFA y queda excluido por el Nivel AAL2 de la Capa 0, el protocolo forense `emergency_reset_mfa` permite al `super_admin` decapitar el TOTP de la base de datos de Auth en Supabase. Se deja un registro inmutable en `maintenance_logs` detallando el ID del afectado.
+
+Recuperación en el Tiempo (PITR): La protección lógica WORM es complementada con Point-in-Time Recovery a nivel de infraestructura. Mediante la retención de WAL, un administrador de TI puede deshacer operaciones en masa accidentales o maliciosas con precisión de microsegundos, asegurando el libro mayor financiero.
+
+Degradación Analógica (Colapso 4G): Si la conectividad colapsa en la mina, los operadores recurren a Talones de Carbono para los Pre-Starts. Al regresar la conexión, el Comando Central utiliza la Cuarentena OCR (Visión Computacional Aislada) para ingerir las fotografías de los talones y forzar el cierre retroactivo auditado, empujando la liquidación al ERP como si la torre celular nunca hubiera caído.

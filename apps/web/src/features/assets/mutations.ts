@@ -53,7 +53,7 @@ export const useSubmitTelemetry = () => {
       // Retornar el contexto con el estado previo para el manejo de errores
       return { previousAssets };
     },
-    onError: (err, newLog, context) => {
+    onError: (_err, _newLog, context) => {
       // Revertir la caché al estado original si la sincronización online falla de forma definitiva
       if (context?.previousAssets) {
         queryClient.setQueryData(['assets'], context.previousAssets);
@@ -61,3 +61,4 @@ export const useSubmitTelemetry = () => {
     },
   });
 };
+

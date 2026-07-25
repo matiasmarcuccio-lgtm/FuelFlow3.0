@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Settings, Save } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -12,7 +12,7 @@ export const SystemConfig = () => {
   async function fetchConfigs() {
     const { data, error } = await supabase.from('system_config').select('*');
     if (!error && data) {
-      setConfigs(data);
+      setConfigs(data.map(d => ({ key: d.key, value: String(d.value) })));
     }
   };
 

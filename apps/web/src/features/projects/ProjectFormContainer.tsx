@@ -34,7 +34,7 @@ export function ProjectFormContainer({ projectId, onSuccess }: Props) {
     mutationFn: async (values: Partial<Project>) => {
       const { data, error } = await supabase
         .from('projects')
-        .upsert({ ...values, ...(projectId ? { id: projectId } : {}) })
+        .upsert({ ...values, ...(projectId ? { id: projectId } : {}) } as any)
         .select()
         .single();
 

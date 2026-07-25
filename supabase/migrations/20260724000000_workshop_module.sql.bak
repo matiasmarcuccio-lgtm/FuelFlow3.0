@@ -1,0 +1,108 @@
+-- 1. Ampliación del Rol (Motor de Elevación)
+-- Asumiendo que controlamos los roles mediante un CHECK constraint en perfiles
+ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check 
+CHECK (role IN ('super_admin', 'fleet_manager', 'supervisor', 'driver', 'operator', 'fitter', 'suspended'));
+
+-- 2. Tipos de Datos del Taller
+CREATE TYPE public.maintenance_status AS ENUM ('in_progress', 'resolved');
+
+-- 3. La Bóveda de Custodia: maintenance_logs
+CREATE TABLE public.maintenance_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    asset_id UUID NOT NULL REFERENCES public.assets(id) ON DELETE CASCADE,
+    locked_by_uid UUID REFERENCES auth.users(id),
+    released_by_uid UUID REFERENCES auth.users(id),
+    issue_description TEXT NOT NULL,
+    resolution_notes TEXT,
+    status maintenance_status NOT NULL DEFAULT 'in_progress',
+    locked_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    released_at TIMESTAMPTZ
+);
+
+-- 4. El Cerrojo WHS Absoluto sobre la Maquinaria
+REVOKE UPDATE (status) ON public.assets FROM authenticated;
+
+-- 5. RPC: Secuestro Forense (Fitter Lock)
+CREATE OR REPLACE FUNCTION public.fitter_lock_asset(p_asset_id UUID, p_issue TEXT)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_caller_id UUID;
+    v_caller_role TEXT;
+    v_log_id UUID;
+    v_asset_status asset_status;
+BEGIN
+    -- Extracción de identidad y rol desde la memoria JWT
+    v_caller_id := auth.uid();
+    -- Usamos profiles para obtener el rol, ya que el JWT puede no tener el rol exacto o usarse de otra forma
+    SELECT role INTO v_caller_role FROM public.profiles WHERE id = v_caller_id;
+
+    IF v_caller_id IS NULL OR v_caller_role != 'fitter' THEN
+        RAISE EXCEPTION 'P0001' USING MESSAGE = 'WHS_UNAUTHORIZED: Solo el personal de taller certificado puede inmovilizar maquinaria.';
+    END IF;
+
+    -- Bloqueo transaccional contra condiciones de carrera
+    SELECT status INTO v_asset_status FROM public.assets WHERE id = p_asset_id FOR UPDATE;
+    
+    IF v_asset_status = 'maintenance' THEN
+        RAISE EXCEPTION 'P0001' USING MESSAGE = 'WHS_CONFLICT: El activo ya se encuentra secuestrado en el taller.';
+    END IF;
+
+    -- Mutación del activo
+    UPDATE public.assets SET status = 'maintenance' WHERE id = p_asset_id;
+
+    -- Sellado del registro forense
+    INSERT INTO public.maintenance_logs (asset_id, locked_by_uid, issue_description, status)
+    VALUES (p_asset_id, v_caller_id, p_issue, 'in_progress')
+    RETURNING id INTO v_log_id;
+
+    RETURN v_log_id;
+END;
+$$;
+
+-- 6. RPC: Liberación Forense (Fitter Release)
+CREATE OR REPLACE FUNCTION public.fitter_release_asset(p_log_id UUID, p_resolution TEXT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    v_caller_id UUID;
+    v_caller_role TEXT;
+    v_asset_id UUID;
+    v_log_status maintenance_status;
+BEGIN
+    v_caller_id := auth.uid();
+    SELECT role INTO v_caller_role FROM public.profiles WHERE id = v_caller_id;
+
+    IF v_caller_id IS NULL OR v_caller_role != 'fitter' THEN
+        RAISE EXCEPTION 'P0001' USING MESSAGE = 'WHS_UNAUTHORIZED: Solo el personal de taller certificado puede liberar maquinaria.';
+    END IF;
+
+    -- Verificación y bloqueo de la orden de trabajo
+    SELECT asset_id, status INTO v_asset_id, v_log_status 
+    FROM public.maintenance_logs 
+    WHERE id = p_log_id FOR UPDATE;
+
+    IF v_log_status = 'resolved' THEN
+        RAISE EXCEPTION 'P0001' USING MESSAGE = 'WHS_CONFLICT: Esta orden de trabajo ya fue cerrada y sellada forensemente.';
+    END IF;
+
+    -- Firma criptográfica del técnico de salida (Delegación de cadena de custodia)
+    UPDATE public.maintenance_logs 
+    SET 
+        status = 'resolved',
+        resolution_notes = p_resolution,
+        released_by_uid = v_caller_id,
+        released_at = now()
+    WHERE id = p_log_id;
+
+    -- Devolución del activo a la jurisdicción operativa
+    UPDATE public.assets SET status = 'operational' WHERE id = v_asset_id;
+END;
+$$;

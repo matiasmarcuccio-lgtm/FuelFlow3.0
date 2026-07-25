@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useParams } from 'react-router-dom';
 import { AnalyticsPresenter } from './AnalyticsPresenter';
 import { useManagerialKPIs } from './useManagerialKPIs';

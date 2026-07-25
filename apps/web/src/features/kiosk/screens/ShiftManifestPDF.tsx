@@ -1,6 +1,6 @@
-import React from 'react';
+
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
-import { ShiftManifestPayload } from '../mutations';
+import type { ShiftManifestPayload } from '../mutations';
 
 const styles = StyleSheet.create({
     page: { padding: 30, fontFamily: 'Helvetica' },

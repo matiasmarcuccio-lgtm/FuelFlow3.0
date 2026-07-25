@@ -83,9 +83,7 @@ const TopologySchema = z.object({
 
 const CrewMemberSchema = z.object({
     user_id: z.string().uuid(),
-    full_name: z.string().min(1),
-    pin_hash: z.string().min(10),
-    pin_salt: z.string().min(10)
+    full_name: z.string().min(1)
 });
 
 export const HydrationPayloadSchema = z.object({

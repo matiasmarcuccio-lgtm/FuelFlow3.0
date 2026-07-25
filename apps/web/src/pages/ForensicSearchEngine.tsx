@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Search, Shield, History, Clock } from 'lucide-react';
 
@@ -35,11 +35,11 @@ export const ForensicSearchEngine = () => {
 
   return (
     <div className="flex-1 p-8 bg-background text-foreground h-full flex flex-col">
-      <div className="flex justify-between items-center mb-8 border-b border-outline-variant pb-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 border-b border-border pb-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
-            <Shield className="text-on-surface-variant" />
-            Forensic Search Engine
+            <Search className="text-primary" />
+            Forensic engine
           </h1>
           <p className="text-sm text-outline mt-1">Read-only immutable timeline for NHVR Inspectors. Reconstruct operational history.</p>
         </div>
@@ -50,13 +50,13 @@ export const ForensicSearchEngine = () => {
             placeholder="Search UUID, Status, Flag..." 
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="bg-slate-950 border border-outline-variant text-on-surface rounded pl-9 pr-4 py-2 text-sm focus:border-outline outline-none w-64 font-mono"
+            className="bg-white dark:bg-slate-950 border border-outline-variant text-on-surface rounded pl-9 pr-4 py-2 text-sm focus:border-outline outline-none w-64 font-mono"
           />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-slate-950 p-6 rounded-lg border border-outline-variant shadow-inner">
-        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-700 before:to-transparent">
+      <div className="flex-1 overflow-y-auto bg-background p-6 rounded-lg shadow-inner">
+        <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-300 dark:before:via-slate-700 before:to-transparent">
           {filteredTimeline.map((record, i) => {
             const isResolved = record.resolved_at !== null;
             return (
@@ -68,7 +68,7 @@ export const ForensicSearchEngine = () => {
                 </div>
                 
                 {/* Content */}
-                <div className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-lg bg-surface border border-outline-variant shadow-sm border ${record.digital_bypass ? 'border-dashed border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : 'border-outline-variant'}`}>
+                <div className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-lg bg-card shadow-lg ${record.digital_bypass ? 'border-2 border-dashed border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.1)]' : ''}`}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-mono text-xs text-primary font-bold">LOAD_ID: {record.load_id.substring(0,8)}</span>
                     <span className="flex items-center gap-1 text-[10px] text-outline font-mono">

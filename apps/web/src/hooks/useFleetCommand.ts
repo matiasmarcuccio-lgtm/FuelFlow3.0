@@ -98,17 +98,33 @@ export function useFleetCommand() {
   };
 
   const generateInvite = async (fleetId: string) => {
-    return executeCommand(() => supabase.rpc('fn_generate_fleet_invite', { p_fleet_id: fleetId }));
+    return executeCommand(async () => await supabase.rpc('fn_generate_fleet_invite', { p_fleet_id: fleetId }));
   };
 
   const revokeAccess = async (driverId: string) => {
-    return executeCommand(() => supabase.rpc('fn_revoke_driver_access', { p_driver_id: driverId }));
+    return executeCommand(async () => await supabase.rpc('fn_revoke_driver_access', { p_driver_id: driverId }));
   };
 
   const overrideShift = async (absentDriverId: string, reserveDriverId: string) => {
-    return executeCommand(() => supabase.rpc('fn_override_shift_assignment', { 
+    return executeCommand(async () => await supabase.rpc('fn_override_shift_assignment', { 
       p_absent_driver_id: absentDriverId, 
       p_reserve_driver_id: reserveDriverId 
+    }));
+  };
+
+  const elevateRole = async (targetId: string, newRole: string, justification: string) => {
+    return executeCommand(async () => await supabase.rpc('fn_elevate_user_role', {
+      p_target_id: targetId,
+      p_new_role: newRole,
+      p_justification: justification
+    }));
+  };
+
+  const revokeAdminRole = async (targetId: string, newRole: string, justification: string) => {
+    return executeCommand(async () => await supabase.rpc('fn_revoke_user_role', {
+      p_target_id: targetId,
+      p_new_role: newRole,
+      p_justification: justification
     }));
   };
 
@@ -122,6 +138,8 @@ export function useFleetCommand() {
     generateInvite,
     revokeAccess,
     overrideShift,
+    elevateRole,
+    revokeAdminRole,
     resetState
   };
 }

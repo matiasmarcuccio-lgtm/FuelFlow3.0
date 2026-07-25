@@ -20,7 +20,7 @@ export const KinematicKiosk = () => {
     const { sessionState, revalidate } = useKioskState(telemetry, assetId);
     const [assetType, setAssetType] = React.useState<string | null>(null);
 
-    const queryClient = import('@tanstack/react-query').then(m => m.useQueryClient);
+    
     
     React.useEffect(() => {
         if (assetId) {
@@ -85,7 +85,7 @@ export const KinematicKiosk = () => {
                 if (!projectId || !assetId) return <div className="p-8 text-foreground">Missing IDs</div>;
                 return <FittersOverride assetId={assetId} projectId={projectId} onRectified={revalidate} />;
             case 'IN_QUEUE':
-                return <ParkedJITHUD telemetry={telemetry} />;
+                return <ParkedJITHUD />;
             case 'SHUTDOWN':
                 if (!projectId || !assetId) {
                     return <div className="p-8 text-foreground">Missing Project/Asset ID</div>;
@@ -103,3 +103,4 @@ export const KinematicKiosk = () => {
         </>
     );
 };
+

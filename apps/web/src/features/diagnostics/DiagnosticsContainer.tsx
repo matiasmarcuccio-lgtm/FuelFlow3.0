@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useActiveDefects } from './queries';
 import { useResolvePlantDefect } from './mutations';
 import { DiagnosticsPresenter } from './DiagnosticsPresenter';

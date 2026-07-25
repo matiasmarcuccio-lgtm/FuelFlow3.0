@@ -1,0 +1,138 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fuelflow-billing-ingress",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "name": "Supabase Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "webhookId": "generar-uuid-aqui"
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{$json.body}}",
+        "secret": "TU_B2B_WEBHOOK_SECRET_AQUI",
+        "encoding": "hex"
+      },
+      "name": "Crypto Verifier",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.data}}",
+              "value2": "={{$('Supabase Webhook').item.headers['x-fuelflow-signature']}}"
+            }
+          ]
+        }
+      },
+      "name": "Zero-Trust Guillotine",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "status": "401",
+        "message": "Firma HMAC inválida o ausente. Brecha de seguridad detectada."
+      },
+      "name": "Drop Request (401)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [860, 420]
+    },
+    {
+      "parameters": {
+        "sourceKey": "body"
+      },
+      "name": "Parse Valid JSON",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [860, 180]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "match": {
+            "all": [
+              {
+                "condition": "string",
+                "value1": "={{$json.event}}",
+                "value2": "billing.certificate.generated"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Router Financiero",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [1080, 180]
+    }
+  ],
+  "connections": {
+    "Supabase Webhook": {
+      "main": [
+        [
+          {
+            "node": "Crypto Verifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto Verifier": {
+      "main": [
+        [
+          {
+            "node": "Zero-Trust Guillotine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zero-Trust Guillotine": {
+      "main": [
+        [
+          {
+            "node": "Parse Valid JSON",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Drop Request (401)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Valid JSON": {
+      "main": [
+        [
+          {
+            "node": "Router Financiero",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

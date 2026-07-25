@@ -1,35 +1,39 @@
-import React from 'react';
+
 import { NavLink } from 'react-router-dom';
-import { Activity, ShieldCheck, Map, Settings, FileText, HardHat, Truck, Search, Users } from 'lucide-react';
+import { Activity, Map, Settings, FileText, HardHat, Truck, Search, Users } from 'lucide-react';
 
 export const Sidebar = () => {
   return (
-    <div className="w-64 bg-background border-r border-outline-variant text-on-surface flex flex-col h-full overflow-y-auto">
-      <div className="p-6 border-b border-outline-variant">
-        <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-          <Activity className="text-primary" />
-          FuelFlow
+    <div className="w-full h-full glass-card text-foreground flex flex-col overflow-y-auto shadow-2xl ring-1 ring-white/5 bg-card/40 transition-all duration-300 custom-scrollbar">
+      <div className="p-6 border-b border-border/50 bg-background/20 backdrop-blur-md sticky top-0 z-10">
+        <h1 className="text-xl font-bold font-mono text-foreground flex items-center gap-2">
+          <Activity className="text-primary drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+          JITSite
         </h1>
-        <p className="text-xs text-outline mt-1 uppercase tracking-wider">Command Center</p>
+        <p className="text-[10px] text-muted-foreground mt-1.5 uppercase tracking-widest font-bold">Command Center</p>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
-        <p className="text-xs font-semibold text-outline uppercase tracking-wider mb-4 mt-2 px-2">Live Ops (Shared)</p>
+      <nav className="flex-1 p-4 space-y-1">
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-4 px-2">
+          Live Ops (Shared)
+        </p>
         
         <NavLink 
           to="/" 
           end
-          className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-primary text-on-primary/20 text-primary font-medium' : 'hover:bg-surface border border-outline-variant shadow-sm hover:text-white'}`}
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-primary/15 text-primary font-medium' : 'hover:bg-accent text-foreground hover:text-accent-foreground'}`}
         >
           <Map className="w-5 h-5" />
           Telemetry Map
         </NavLink>
 
-        <p className="text-xs font-semibold text-outline uppercase tracking-wider mb-4 mt-8 px-2">Builder</p>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-6 px-2">
+          Builder
+        </p>
         
         <NavLink 
           to="/builder" 
-          className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-emerald-600/20 text-emerald-400 font-medium' : 'hover:bg-surface border border-outline-variant shadow-sm hover:text-white'}`}
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-emerald-500/15 text-emerald-500 font-medium' : 'hover:bg-accent text-foreground hover:text-accent-foreground'}`}
         >
           <HardHat className="w-5 h-5" />
           Project Progress
@@ -37,27 +41,31 @@ export const Sidebar = () => {
         
         <NavLink 
           to="/analytics" 
-          className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-emerald-600/20 text-emerald-400 font-medium' : 'hover:bg-surface border border-outline-variant shadow-sm hover:text-white'}`}
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-emerald-500/15 text-emerald-500 font-medium' : 'hover:bg-accent text-foreground hover:text-accent-foreground'}`}
         >
           <Activity className="w-5 h-5" />
-          Inteligencia Financiera
+          Financial Intelligence
         </NavLink>
         
-        <p className="text-xs font-semibold text-outline uppercase tracking-wider mb-4 mt-8 px-2">Fleet</p>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-6 px-2">
+          Fleet
+        </p>
 
         <NavLink 
           to="/fleet" 
-          className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-orange-600/20 text-orange-400 font-medium' : 'hover:bg-surface border border-outline-variant shadow-sm hover:text-white'}`}
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-orange-500/15 text-orange-500 font-medium' : 'hover:bg-accent text-foreground hover:text-accent-foreground'}`}
         >
           <Truck className="w-5 h-5" />
           Resource Matrix
         </NavLink>
 
-        <p className="text-xs font-semibold text-outline uppercase tracking-wider mb-4 mt-8 px-2">Governance</p>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-6 px-2">
+          Governance
+        </p>
         
         <NavLink 
           to="/compliance" 
-          className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-purple-600/20 text-purple-400 font-medium' : 'hover:bg-surface border border-outline-variant shadow-sm hover:text-white'}`}
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-purple-500/15 text-purple-500 font-medium' : 'hover:bg-accent text-foreground hover:text-accent-foreground'}`}
         >
           <FileText className="w-5 h-5" />
           CoR Weekly Summary
@@ -65,16 +73,19 @@ export const Sidebar = () => {
 
         <NavLink 
           to="/forensic" 
-          className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-surface-variant/50 text-white font-medium' : 'hover:bg-surface border border-outline-variant shadow-sm hover:text-white'}`}
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-primary/15 text-primary font-medium' : 'hover:bg-accent text-foreground hover:text-accent-foreground'}`}
         >
-          <Search className="w-5 h-5 text-on-surface-variant" />
+          <Search className="w-5 h-5" />
           Forensic Engine
         </NavLink>
-        <p className="text-xs font-semibold text-outline uppercase tracking-wider mb-4 mt-8 px-2">Administration</p>
+        
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-6 px-2">
+          Administration
+        </p>
 
         <NavLink 
           to="/users" 
-          className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-primary text-on-primary/20 text-primary font-medium' : 'hover:bg-surface border border-outline-variant shadow-sm hover:text-white'}`}
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-primary/15 text-primary font-medium' : 'hover:bg-accent text-foreground hover:text-accent-foreground'}`}
         >
           <Users className="w-5 h-5" />
           Human Resources
@@ -82,17 +93,18 @@ export const Sidebar = () => {
 
         <NavLink 
           to="/settings" 
-          className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${isActive ? 'bg-surface-variant/50 text-white font-medium' : 'hover:bg-surface border border-outline-variant shadow-sm hover:text-white'}`}
+          className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${isActive ? 'bg-primary/15 text-primary font-medium' : 'hover:bg-accent text-foreground hover:text-accent-foreground'}`}
         >
-          <Settings className="w-5 h-5 text-on-surface-variant" />
+          <Settings className="w-5 h-5" />
           System Settings
         </NavLink>
       </nav>
 
-      <div className="p-4 border-t border-outline-variant text-xs text-outline-variant">
+      <div className="p-4 border-t border-border text-xs text-muted-foreground">
         <p>Chain of Command Architecture</p>
-        <p className="mt-1">v3.1.0-RC</p>
+        <p className="mt-1 font-mono">v3.1.0-RC</p>
       </div>
     </div>
   );
 };
+

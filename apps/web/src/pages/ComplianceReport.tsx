@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FileText, Download, CheckCircle, ShieldAlert, Activity } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { formatDistanceToNow } from 'date-fns';
 
 // Helper to determine the "effort" of a justification
 // Low effort = close to 15 chars, repetitive, generic
@@ -46,21 +45,20 @@ export const ComplianceReport = () => {
   const cultureHealthWarning = resolvedAnomalies.length > 0 && (poorEffortCount / resolvedAnomalies.length) > 0.5;
 
   return (
-    <div className="flex-1 p-8 bg-background text-foreground h-full overflow-y-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <FileText className="text-on-surface-variant" />
-          CoR Weekly Summary
+    <div className="flex-1 p-4 md:p-8 bg-background text-foreground h-full overflow-y-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
+          <FileText className="text-primary" />
+          CoR weekly summary
         </h1>
-        <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-foreground px-4 py-2 rounded-md transition-colors">
-          <Download className="w-4 h-4" />
-          Export PDF
+        <button className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors text-sm">
+          <Download className="w-4 h-4" /> Export PDF
         </button>
       </div>
 
       {cultureHealthWarning && (
-        <div className="mb-6 p-4 bg-orange-900/50 border border-orange-700 rounded-lg flex items-center gap-3">
-          <Activity className="text-orange-500 w-6 h-6 animate-pulse" />
+        <div className="mb-6 p-4 bg-orange-100 dark:bg-orange-900/50 border border-orange-300 dark:border-orange-700 rounded-lg flex items-center gap-3">
+          <Activity className="text-orange-600 dark:text-orange-500 w-6 h-6 animate-pulse" />
           <div>
             <h3 className="font-bold text-orange-400">WARNING: CULTURAL FRACTURE DETECTED</h3>
             <p className="text-sm text-orange-200">Over 50% of recent interventions demonstrate minimum compliance effort (pencil-whipping). System is recording data, but failing accountability.</p>
@@ -68,33 +66,34 @@ export const ComplianceReport = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-surface border border-outline-variant shadow-sm p-4 rounded-lg border border-outline-variant">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+        <div className="bg-card shadow-lg p-4 rounded-lg">
           <p className="text-on-surface-variant text-sm">Total Interventions</p>
           <p className="text-3xl font-bold text-foreground">{resolvedAnomalies.length}</p>
         </div>
-        <div className="bg-surface border border-outline-variant shadow-sm p-4 rounded-lg border border-outline-variant">
+        <div className="bg-card shadow-lg p-4 rounded-lg">
           <p className="text-on-surface-variant text-sm">Emergency Overrides</p>
-          <p className="text-3xl font-bold text-purple-400">
+          <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
             {resolvedAnomalies.filter(a => a.anomaly_flag === 'DRIVER_EMERGENCY_OVERRIDE').length}
           </p>
         </div>
-        <div className="bg-surface border border-outline-variant shadow-sm p-4 rounded-lg border border-outline-variant">
+        <div className="bg-card shadow-lg p-4 rounded-lg">
           <p className="text-on-surface-variant text-sm">Mass Mismatches</p>
-          <p className="text-3xl font-bold text-red-400">
+          <p className="text-3xl font-bold text-red-600 dark:text-red-400">
             {resolvedAnomalies.filter(a => a.anomaly_flag === 'MASS_MISMATCH').length}
           </p>
         </div>
-        <div className="bg-surface border border-outline-variant shadow-sm p-4 rounded-lg border border-outline-variant">
+        <div className="bg-card shadow-lg p-4 rounded-lg">
           <p className="text-on-surface-variant text-sm">Min-Effort Justifications</p>
-          <p className={`text-3xl font-bold ${cultureHealthWarning ? 'text-orange-400' : 'text-emerald-400'}`}>
+          <p className={`text-3xl font-bold ${cultureHealthWarning ? 'text-orange-600 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
             {poorEffortCount}
           </p>
         </div>
       </div>
 
-      <div className="bg-surface border border-outline-variant shadow-sm rounded-lg border border-outline-variant overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-card shadow-lg rounded-lg overflow-hidden">
+        <div className="overflow-x-auto w-full">
+        <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-background border-b border-outline-variant">
               <th className="p-3 text-sm font-semibold text-on-surface">Timestamp</th>
@@ -108,7 +107,7 @@ export const ComplianceReport = () => {
             {resolvedAnomalies.map((record) => {
               const effort = calculateEffortScore(record.anomaly_resolution_reason);
               return (
-                <tr key={record.id} className="border-b border-outline-variant hover:bg-surface-variant/50">
+                <tr key={record.id} className="border-b border-outline-variant hover:bg-muted/50">
                   <td className="p-3 text-xs text-on-surface-variant font-mono">
                     {record.anomaly_resolved_at ? new Date(record.anomaly_resolved_at).toLocaleString() : 'N/A'}
                   </td>
@@ -128,7 +127,7 @@ export const ComplianceReport = () => {
                   <td className="p-3">
                     <div className="flex flex-wrap gap-1">
                       {(record.anomaly_resolution_tags || []).map((tag: string) => (
-                        <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-blue-900 text-blue-300 border border-blue-800">
+                        <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-800">
                           {tag.replace(/_/g, ' ')}
                         </span>
                       ))}
@@ -155,6 +154,7 @@ export const ComplianceReport = () => {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

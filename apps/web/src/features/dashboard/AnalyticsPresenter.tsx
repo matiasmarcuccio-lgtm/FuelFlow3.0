@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts';
+import { Activity } from 'lucide-react';
 
 interface AnalyticsPresenterProps {
     efficiency: any[];
@@ -60,40 +61,43 @@ export function AnalyticsPresenter({ efficiency, production, downtime }: Analyti
     const blockColors = ['#f59e0b', '#3b82f6', '#10b981', '#ef4444', '#8b5cf6'];
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] text-foreground p-8">
-            <header className="mb-8 border-b border-outline-variant pb-4">
-                <h1 className="text-3xl font-bold text-foreground tracking-tight">Sala de Inteligencia Financiera</h1>
-                <p className="text-on-surface-variant mt-1">Análisis OLAP de Rendimiento Logístico</p>
+        <div className="h-full overflow-y-auto bg-background text-foreground p-4 md:p-8 font-sans">
+            <header className="mb-8 border-b border-border pb-4">
+                <h1 className="text-2xl font-bold flex items-center gap-3 text-foreground mb-1">
+                    <Activity className="text-primary w-6 h-6" />
+                    Financial intelligence
+                </h1>
+                <p className="text-muted-foreground mt-1">OLAP Logistics Performance Analysis</p>
             </header>
 
             {/* Top Row: Header Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-background border border-outline-variant p-6 rounded-xl shadow-lg">
-                    <h3 className="text-sm font-medium text-on-surface-variant uppercase tracking-wide">Tonelaje Total (Semana)</h3>
-                    <p className="text-4xl font-bold text-foreground mt-2">{totalTonnage.toLocaleString(undefined, { maximumFractionDigits: 1 })} T</p>
+                <div className="bg-card shadow-lg p-6 rounded-lg">
+                    <h3 className="text-sm font-mono font-bold text-muted-foreground uppercase tracking-wide">Total Tonnage (Weekly)</h3>
+                    <p className="text-4xl font-mono font-bold text-foreground mt-2">{totalTonnage.toLocaleString(undefined, { maximumFractionDigits: 1 })} T</p>
                 </div>
                 
-                <div className={`bg-background border ${avgEfficiency > 3.0 ? 'border-red-500/50' : 'border-outline-variant'} p-6 rounded-xl shadow-lg relative overflow-hidden`}>
-                    <h3 className="text-sm font-medium text-on-surface-variant uppercase tracking-wide">Eficiencia JIT (Avg)</h3>
-                    <p className={`text-4xl font-bold mt-2 ${avgEfficiency > 3.0 ? 'text-red-400' : 'text-emerald-400'}`}>
-                        {avgEfficiency.toFixed(2)} min/ciclo
+                <div className={`bg-card shadow-lg ${avgEfficiency > 3.0 ? 'border-2 border-destructive' : ''} p-6 rounded-lg relative overflow-hidden`}>
+                    <h3 className="text-sm font-mono font-bold text-muted-foreground uppercase tracking-wide">JIT Efficiency (Avg)</h3>
+                    <p className={`text-4xl font-mono font-bold mt-2 ${avgEfficiency > 3.0 ? 'text-destructive' : 'text-primary'}`}>
+                        {avgEfficiency.toFixed(2)} min/cycle
                     </p>
                     {avgEfficiency > 3.0 && (
-                        <div className="absolute top-0 right-0 w-2 h-full bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]"></div>
+                        <div className="absolute top-0 right-0 w-2 h-full bg-destructive shadow-[0_0_15px_rgba(239,68,68,0.5)]"></div>
                     )}
                 </div>
 
-                <div className="bg-background border border-outline-variant p-6 rounded-xl shadow-lg">
-                    <h3 className="text-sm font-medium text-on-surface-variant uppercase tracking-wide">Impacto Fitter (Downtime)</h3>
-                    <p className="text-4xl font-bold text-foreground mt-2">{totalDowntime.toFixed(1)} Hrs</p>
+                <div className="bg-card shadow-lg p-6 rounded-lg">
+                    <h3 className="text-sm font-mono font-bold text-muted-foreground uppercase tracking-wide">Fitter Impact (Downtime)</h3>
+                    <p className="text-4xl font-mono font-bold text-foreground mt-2">{totalDowntime.toFixed(1)} Hrs</p>
                 </div>
             </div>
 
             {/* Main Body: Gráficos */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Gráfico de Producción */}
-                <div className="bg-background border border-outline-variant p-6 rounded-xl shadow-lg">
-                    <h3 className="text-lg font-semibold text-foreground mb-6">Volumen de Extracción por Bloque Geológico</h3>
+                <div className="bg-card shadow-lg p-6 rounded-lg">
+                    <h3 className="text-lg font-mono font-bold text-foreground mb-6 uppercase tracking-wider">Extraction Volume By Geological Block</h3>
                     <div className="h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={productionByDate.data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
@@ -130,8 +134,8 @@ export function AnalyticsPresenter({ efficiency, production, downtime }: Analyti
                 </div>
 
                 {/* Gráfico de Eficiencia */}
-                <div className="bg-background border border-outline-variant p-6 rounded-xl shadow-lg">
-                    <h3 className="text-lg font-semibold text-foreground mb-6">Tendencia de Eficiencia JIT</h3>
+                <div className="bg-card shadow-lg p-6 rounded-lg">
+                    <h3 className="text-lg font-mono font-bold text-foreground mb-6 uppercase tracking-wider">JIT Efficiency Trend</h3>
                     <div className="h-80 w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={efficiencyByDate} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>

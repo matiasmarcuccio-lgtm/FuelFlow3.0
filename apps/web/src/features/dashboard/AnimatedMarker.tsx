@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Marker } from 'react-leaflet';
 import L from 'leaflet';
-import { TacticalAsset } from './useTacticalFleetMap';
+import type { TacticalAsset } from './useTacticalFleetMap';
 
 interface AnimatedMarkerProps {
   asset: TacticalAsset;
@@ -70,3 +70,4 @@ export const AnimatedMarker: React.FC<AnimatedMarkerProps> = ({ asset, icon, chi
     </Marker>
   );
 };
+

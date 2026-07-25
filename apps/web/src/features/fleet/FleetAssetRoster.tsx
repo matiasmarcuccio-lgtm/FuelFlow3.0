@@ -1,0 +1,254 @@
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../../lib/supabase';
+import { FitterReleaseModal } from '../maintenance/FitterReleaseModal';
+
+interface AssetRow {
+  id: string;
+  name: string;
+  asset_type: string;
+  status: 'AVAILABLE' | 'OUT_OF_SERVICE' | 'IN_MAINTENANCE' | 'DISPATCHED';
+  last_prestart_at: string | null;
+  active_lockout_reason?: string;
+}
+
+interface FleetAssetRosterProps {
+  userRole: 'super_admin' | 'fleet_manager' | 'fitter' | 'dispatcher' | 'driver';
+  fleetId: string;
+}
+
+export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fleetId }) => {
+  const queryClient = useQueryClient();
+  const [filter, setFilter] = useState<string>('ALL');
+  
+  // Estado para controlar qué activo se inyecta en el Modal del Mecánico
+  const [selectedAssetForRelease, setSelectedAssetForRelease] = useState<AssetRow | null>(null);
+
+  // 1. CONSULTA DE ACTIVOS EN CAPA 0 (Con join relacional a la etiqueta de peligro activa)
+  const { data: assets = [], isLoading, error } = useQuery<AssetRow[]>({
+    queryKey: ['fleet_assets_roster', fleetId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('assets')
+        .select(`
+          id,
+          name,
+          asset_type,
+          status,
+          last_prestart_at,
+          asset_lockouts!left(lockout_reason, status)
+        `)
+        .eq('fleet_id', fleetId)
+        .order('name', { ascending: true });
+
+      if (error) throw new Error(error.message);
+
+      // Aplanamos el arreglo para extraer la razón exacta del bloqueo activo
+      return data.map((item: any) => {
+        const activeLock = item.asset_lockouts?.find((l: any) => l.status === 'ACTIVE');
+        return {
+          id: item.id,
+          name: item.name,
+          asset_type: item.asset_type,
+          status: item.status,
+          last_prestart_at: item.last_prestart_at,
+          active_lockout_reason: activeLock ? activeLock.lockout_reason : 'BLOQUEO NO ESPECIFICADO EN HISTORIAL',
+        };
+      });
+    },
+    refetchInterval: 10000, // Telemetría en vivo cada 10 segundos
+  });
+
+  // Filtrado reactivo en memoria
+  const filteredAssets = assets.filter((asset) => {
+    if (filter === 'ALL') return true;
+    if (filter === 'LOCKED') return asset.status === 'OUT_OF_SERVICE';
+    return asset.status === filter;
+  });
+
+  // Evaluación de soberanía para renderizar botones técnicos
+  const canAuthorizeRelease = ['fitter', 'fleet_manager', 'super_admin'].includes(userRole);
+
+  const handleReleaseSuccess = (releaseData: any) => {
+    console.debug('⚡ Indulto ejecutado con éxito en Capa 0:', releaseData);
+    // Invalidamos la caché de React Query para forzar que la fila mutada cambie a verde en 10ms
+    queryClient.invalidateQueries({ queryKey: ['fleet_assets_roster', fleetId] });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-12 text-center font-mono text-slate-500 uppercase animate-pulse">
+        [CARGANDO TELEMETRÍA DE LA FLOTA EN HOBART...]
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-950/40 border-2 border-red-800 p-6 rounded-2xl font-mono text-xs text-red-400 uppercase">
+        ⚠️ ERROR DE ADUANA EN EL ROSTER: {error.message}
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 md:p-8 font-sans select-none shadow-2xl">
+      
+      {/* Cabecera de Control Operativo */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-6 mb-6">
+        <div>
+          <div className="flex items-center gap-3">
+            <span className="w-3 h-3 bg-blue-500 rounded-full animate-ping"></span>
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+              Roster de Maquinaria • Command Center
+            </h2>
+          </div>
+          <p className="text-xs font-mono text-slate-500 uppercase mt-1">
+            JURISDICCIÓN: FLOTA ID #{fleetId.slice(0, 8)} | ROL ACTIVO: <strong className="text-blue-400">{userRole.toUpperCase()}</strong>
+          </p>
+        </div>
+
+        {/* Botonera de Filtrado Táctico */}
+        <div className="flex flex-wrap gap-2 font-mono text-xs">
+          {[
+            { label: 'TODOS', value: 'ALL' },
+            { label: '🟢 DISPONIBLES', value: 'AVAILABLE' },
+            { label: '🛑 INHABILITADOS (WHS)', value: 'LOCKED' },
+            { label: '🟡 EN TALLER', value: 'IN_MAINTENANCE' },
+          ].map((btn) => (
+            <button
+              key={btn.value}
+              onClick={() => setFilter(btn.value)}
+              className={`px-4 py-2 rounded-xl font-bold uppercase tracking-wider transition-all border ${
+                filter === btn.value
+                  ? 'bg-blue-600 text-black border-blue-400 shadow-lg shadow-blue-600/20'
+                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-700'
+              }`}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
+      </header>
+
+      {/* Tabla General de Maquinaria */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse font-mono text-xs">
+          <thead>
+            <tr className="border-b border-slate-800 text-slate-500 uppercase tracking-widest text-[10px]">
+              <th className="py-4 px-4">Maquinaria (Asset ID)</th>
+              <th className="py-4 px-4">Tipo</th>
+              <th className="py-4 px-4">Estado WHS</th>
+              <th className="py-4 px-4">Último Pre-Start</th>
+              <th className="py-4 px-4 text-right">Acción de Taller</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-900">
+            {filteredAssets.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-12 text-center text-slate-600 uppercase">
+                  No hay maquinaria que coincida con el filtro seleccionado.
+                </td>
+              </tr>
+            ) : (
+              filteredAssets.map((asset) => {
+                const isLocked = asset.status === 'OUT_OF_SERVICE';
+                return (
+                  <tr
+                    key={asset.id}
+                    className={`transition-colors ${
+                      isLocked ? 'bg-red-950/10 hover:bg-red-950/20' : 'hover:bg-slate-900/50'
+                    }`}
+                  >
+                    {/* Columna 1: Nombre e ID */}
+                    <td className="py-4 px-4">
+                      <span className="font-sans font-black text-white text-sm block">
+                        {asset.name}
+                      </span>
+                      <span className="text-[10px] text-slate-600 uppercase">
+                        #{asset.id.slice(0, 8)}
+                      </span>
+                    </td>
+
+                    {/* Columna 2: Tipo de Vehículo */}
+                    <td className="py-4 px-4 text-slate-400 uppercase">
+                      {asset.asset_type || 'EXCAVADORA / HDV'}
+                    </td>
+
+                    {/* Columna 3: Estado con Alto Contraste */}
+                    <td className="py-4 px-4">
+                      {isLocked ? (
+                        <div className="inline-block">
+                          <span className="bg-red-600/20 text-red-500 border border-red-500/40 px-3 py-1 rounded font-black uppercase text-[10px] animate-pulse">
+                            🛑 OUT OF SERVICE
+                          </span>
+                          <p className="text-[9px] text-red-400 mt-1 max-w-xs break-words">
+                            MOTIVO: "{asset.active_lockout_reason}"
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded font-bold uppercase text-[10px]">
+                          🟢 {asset.status}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Columna 4: Marca de tiempo del Pre-Start */}
+                    <td className="py-4 px-4 text-slate-500">
+                      {asset.last_prestart_at
+                        ? new Date(asset.last_prestart_at).toLocaleTimeString('en-AU', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'Australia/Hobart',
+                          }) + ' AEST'
+                        : 'SIN REGISTRO'}
+                    </td>
+
+                    {/* Columna 5: Aduana de Acción (RBAC + Gating) */}
+                    <td className="py-4 px-4 text-right">
+                      {isLocked && canAuthorizeRelease ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedAssetForRelease(asset)}
+                          className="bg-red-600 hover:bg-red-500 text-black font-black px-4 py-3 rounded-xl uppercase tracking-widest text-[10px] shadow-xl hover:shadow-red-600/30 transition-all flex items-center justify-end gap-2 ml-auto animate-bounce"
+                        >
+                          <span>🔧 LIBERAR WHS</span>
+                        </button>
+                      ) : isLocked ? (
+                        <span className="text-[10px] text-slate-600 uppercase font-bold">
+                          [SOLO FITTERS / TALLER]
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-700 uppercase">
+                          — SIN ACCIÓN —
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pie de Tabla Forense */}
+      <footer className="mt-6 pt-4 border-t border-slate-900 flex justify-between items-center font-mono text-[10px] text-slate-600 uppercase">
+        <span>Total Activos en Jurisdicción: {assets.length}</span>
+        <span>Sistema de Enclavamiento WHS de Tasmania Activo</span>
+      </footer>
+
+      {/* INYECCIÓN DEL MODAL DE INDULTO DEL MECÁNICO */}
+      {selectedAssetForRelease && (
+        <FitterReleaseModal
+          isOpen={Boolean(selectedAssetForRelease)}
+          onClose={() => setSelectedAssetForRelease(null)}
+          assetId={selectedAssetForRelease.id}
+          assetName={selectedAssetForRelease.name}
+          lockoutReason={selectedAssetForRelease.active_lockout_reason || 'INHABILITACIÓN WHS'}
+          onReleasedSuccess={handleReleaseSuccess}
+        />
+      )}
+    </div>
+  );
+};

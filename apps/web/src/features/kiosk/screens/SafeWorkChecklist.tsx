@@ -27,7 +27,7 @@ export const SafeWorkChecklist = ({ onComplete, projectId, assetId }: SafeWorkCh
     const [progress, setProgress] = useState(0);
     
     const startTimeRef = useRef<number>(Date.now());
-    const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const recordsRef = useRef<Array<{ item: string; status: string; timestamp: number }>>([]);
     const HOLD_DURATION_MS = 1200; // 1.2 segundos de fricción intencional
 

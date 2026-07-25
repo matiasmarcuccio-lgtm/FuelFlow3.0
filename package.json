@@ -10,9 +10,14 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "db:generate": "turbo run db:generate"
+    "db:generate": "turbo run db:generate",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "dotenv": "^17.4.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
+    "pg": "^8.22.0",
     "turbo": "latest"
   },
   "dependencies": {

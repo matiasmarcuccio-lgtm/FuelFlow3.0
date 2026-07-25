@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { AnomalyRecord } from '../features/command-center/AnomalyStream';
 
@@ -77,3 +77,4 @@ export const ExceptionProvider = ({ children }: { children: React.ReactNode }) =
     </ExceptionContext.Provider>
   );
 };
+

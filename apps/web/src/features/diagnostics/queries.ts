@@ -52,7 +52,7 @@ export const useActiveDefects = (projectId: string) => {
                     table: 'plant_defects',
                     filter: `project_id=eq.${projectId}`
                 },
-                (payload) => {
+                () => {
                     // Refrescar el board si un operador reporta un defecto o si se rectifica
                     queryClient.invalidateQueries({ queryKey: ['active_defects', projectId] });
                 }

@@ -87,7 +87,7 @@ export const useGeofence = (hrcwPolygon: Coordinate[] | null) => {
           : 'ZONA SEGURA. Traspaso autorizado.'
         );
       },
-      (error) => {
+      (_error) => {
         setIsGeolocked(true);
         setGeoMessage('Señal GPS perdida. Mueva el vehículo a un área despejada.');
       },
@@ -111,3 +111,4 @@ export const useGeofence = (hrcwPolygon: Coordinate[] | null) => {
 
   return { isGeolocked, geoMessage, lastKnownCoord };
 };
+

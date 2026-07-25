@@ -1,0 +1,5 @@
+{
+  "apps/web/src/**/*.{ts,tsx}": [
+    "eslint --fix"
+  ]
+}
