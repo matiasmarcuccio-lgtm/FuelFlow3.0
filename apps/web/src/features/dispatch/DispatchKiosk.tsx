@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../lib/supabase';
 import { enqueueRpcPayload } from '../../lib/offlineVault';
 import { useSyncEngine } from '../../hooks/useSyncEngine';
 
