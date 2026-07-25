@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { FitterReleaseModal } from '../maintenance/FitterReleaseModal';
+import { TokenGeneratorModal } from './TokenGeneratorModal';
 
 interface AssetRow {
   id: string;
@@ -23,6 +24,9 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
   
   // Estado para controlar qué activo se inyecta en el Modal del Mecánico
   const [selectedAssetForRelease, setSelectedAssetForRelease] = useState<AssetRow | null>(null);
+
+  // Estado para el provisionamiento de tablets (Zero-Trust Token)
+  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
 
   // 1. CONSULTA DE ACTIVOS EN CAPA 0 (Con join relacional a la etiqueta de peligro activa)
   const { data: assets = [], isLoading, error } = useQuery<AssetRow[]>({
@@ -106,6 +110,16 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
           <p className="text-xs font-mono text-slate-500 uppercase mt-1">
             JURISDICCIÓN: FLOTA ID #{fleetId.slice(0, 8)} | ROL ACTIVO: <strong className="text-blue-400">{userRole.toUpperCase()}</strong>
           </p>
+          
+          {/* Botón de Emisión de Tokens de Flota (Solo Gerencia) */}
+          {['fleet_manager', 'super_admin'].includes(userRole) && (
+            <button
+              onClick={() => setIsTokenModalOpen(true)}
+              className="mt-4 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+            >
+              <span>📲 EMITIR TOKEN DE TABLET</span>
+            </button>
+          )}
         </div>
 
         {/* Botonera de Filtrado Táctico */}
@@ -249,6 +263,13 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
           onReleasedSuccess={handleReleaseSuccess}
         />
       )}
+
+      {/* INYECCIÓN DEL GENERADOR DE TOKENS DE FLOTA */}
+      <TokenGeneratorModal
+        isOpen={isTokenModalOpen}
+        onClose={() => setIsTokenModalOpen(false)}
+        fleetId={fleetId}
+      />
     </div>
   );
 };
