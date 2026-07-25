@@ -3,6 +3,7 @@ import { supabase } from './lib/supabase';
 import { CabinTerminalWrapper } from './pages/CabinTerminalWrapper';
 import { FleetAssetRoster } from './features/fleet/FleetAssetRoster';
 import { RegulatoryAuditDashboard } from './features/command-center/RegulatoryAuditDashboard';
+import { CommandCenterLogin } from './features/command-center/CommandCenterLogin';
 
 // Tipos de Propósito de Hardware y Perfil
 type DevicePurpose = 'UNSET' | 'CABIN_KIOSK' | 'COMMAND_CENTER';
@@ -189,38 +190,8 @@ export const App: React.FC = () => {
 
   // 5. BIFURCACIÓN DE HARDWARE 2: COMMAND CENTER (ENCLAVAMIENTO RBAC)
   if (!profile) {
-    // Si no hay sesión en el Command Center, forzamos login satelital o simulación de ingreso
-    return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 font-mono select-none">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center shadow-2xl">
-          <span className="text-4xl block mb-4">🔐</span>
-          <h2 className="text-xl font-black uppercase text-white font-sans mb-2">Aduana de Mando • Hobart</h2>
-          <p className="text-xs text-slate-400 mb-6">
-            La sesión AAL2 ha caducado o el operador no se ha identificado ante el motor relacional.
-          </p>
-          {authError && (
-            <p className="bg-red-950/80 border border-red-600 text-red-300 text-[10px] p-3 rounded-xl mb-6 font-bold uppercase">
-              ⚠️ {authError}
-            </p>
-          )}
-          <button
-            onClick={() => {
-              // En producción esto invoca la pantalla de login con MFA o SSO de Supabase
-              alert('[DEMO] Abriendo compuerta de autenticación corporativa para Gerencia...');
-            }}
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl uppercase tracking-widest text-xs shadow-xl transition-all"
-          >
-            INICIAR SESIÓN CORPORATIVA ➔
-          </button>
-          <button
-            onClick={executeDevicePurge}
-            className="mt-6 text-[10px] text-slate-600 underline uppercase block w-full hover:text-slate-400"
-          >
-            ← Cambiar propósito de este dispositivo
-          </button>
-        </div>
-      </div>
-    );
+    // Si no hay sesión en el Command Center, forzamos login satelital a través del componente real
+    return <CommandCenterLogin onBackToSelector={executeDevicePurge} />;
   }
 
   // ENCLAVAMIENTO DE ROLES: Verificar quién tiene permiso para ver qué tablero
