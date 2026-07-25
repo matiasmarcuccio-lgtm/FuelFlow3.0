@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { supabase } from './lib/supabaseClient';
+import { supabase } from './lib/supabase';
 import { CabinTerminalWrapper } from './pages/CabinTerminalWrapper';
 import { FleetAssetRoster } from './features/fleet/FleetAssetRoster';
-import { RegulatoryAuditDashboard } from './features/audit/RegulatoryAuditDashboard';
+import { RegulatoryAuditDashboard } from './features/command-center/RegulatoryAuditDashboard';
 
 // Tipos de Propósito de Hardware y Perfil
 type DevicePurpose = 'UNSET' | 'CABIN_KIOSK' | 'COMMAND_CENTER';
