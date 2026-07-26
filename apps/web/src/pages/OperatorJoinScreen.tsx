@@ -120,7 +120,18 @@ export const OperatorJoinScreen: React.FC<OperatorJoinProps> = ({ onEnrollmentCo
     setErrorMsg(null);
 
     try {
-      // Llamada al RPC de PostgreSQL que valida el token y vincula la tablet
+      // 1. Establecer Identidad Anónima de Hardware si la tablet es "virgen"
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        const { error: anonError } = await supabase.auth.signInAnonymously();
+        if (anonError) throw new Error('El backend rechazó la conexión anónima. Habilite "Anonymous Sign-ins" en Supabase.');
+        
+        // Mitigación de Desfase de Reloj (Clock Drift): GoTrue puede emitir el JWT 
+        // unos milisegundos en el "futuro" relativo al reloj de PostgREST.
+        await new Promise(resolve => setTimeout(resolve, 2500));
+      }
+
+      // 2. Llamada al RPC de PostgreSQL que valida el token y vincula la tablet
       const { error } = await supabase.rpc('fn_consume_fleet_invite', {
         p_token: fullToken
       });
