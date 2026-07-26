@@ -33,7 +33,9 @@ const customFetch = async (url: RequestInfo | URL, options?: RequestInit) => {
     return response;
   }
 
-  if (response.status === 401 || response.status === 403) {
+  // Solo interceptamos 401 (Token Expirado). 
+  // NUNCA interceptar 403 (RLS Denied) o causaremos un bucle infinito de refresco.
+  if (response.status === 401) {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       const { data: refreshData } = await supabase.auth.refreshSession();
