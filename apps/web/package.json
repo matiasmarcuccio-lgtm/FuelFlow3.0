@@ -4,13 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "db:types": "cd ../../ && npx supabase gen types typescript --local > packages/shared-types/database.types.ts",
-    "typecheck": "tsc -b",
-    "predev": "npm run db:types && npm run typecheck",
     "dev": "vite",
-    "prebuild": "npm run db:types && npm run typecheck",
-    "build": "vite build",
-    "lint": "eslint .",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
