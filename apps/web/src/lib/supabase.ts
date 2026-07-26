@@ -12,18 +12,10 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey.trim() === '' || supabas
   console.error("🛑 PARADA DE EMERGENCIA: Faltan las variables VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY en Vercel.");
 }
 
-  // Interceptor JWT para Zonas Ciegas:
-  // Si una mutación offline falla por token expirado (401) al recuperar la red,
-  // forzamos la renovación de la sesión automáticamente.
+  // Interceptor JWT original causaba bucles infinitos en errores 42501 (RLS) porque
+  // PostgREST devuelve 401 para fallos de permisos, provocando una avalancha de refreshSession.
+  // Delegamos el refresco de sesión completamente al motor nativo de supabase-js.
   const customFetch = async (url: RequestInfo | URL, options?: RequestInit) => {
-    // 1. Convertir la URL a string de forma segura
-    const urlString = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url && 'url' in url ? url.url : '';
-  
-    // 2. Extraer y preservar todos los headers originales de forma segura
-    // (El objeto Headers nativo no se puede clonar con spread operator {...headers})
-    const originalHeaders = new Headers(options?.headers);
-    
-    // Si faltan las llaves en Vercel, no permitimos que la app haga peticiones que generarán bucles 401
     if (supabaseAnonKey.includes('falsa') || supabaseAnonKey === 'MISSING_KEY') {
       console.error("🛑 BLOQUEO DE RED: Petición abortada porque Vercel no inyectó VITE_SUPABASE_ANON_KEY.");
       return new Response(JSON.stringify({ error: "Missing API Key in Vercel" }), {
@@ -33,30 +25,7 @@ if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey.trim() === '' || supabas
       });
     }
   
-    const response = await fetch(url, options);
-  
-    // Evitar bucle infinito: no interceptar peticiones del propio sistema de Auth
-    if (urlString.includes('/auth/v1/')) {
-      return response;
-    }
-  
-    // Solo interceptamos 401 (Token Expirado). NUNCA interceptar 403 (RLS Denied)
-    if (response.status === 401) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: refreshData } = await supabase.auth.refreshSession();
-        if (refreshData?.session) {
-          // Actualizamos el header Authorization conservando el apikey
-          originalHeaders.set('Authorization', `Bearer ${refreshData.session.access_token}`);
-          
-          return fetch(url, {
-            ...options,
-            headers: originalHeaders
-          });
-        }
-      }
-    }
-    return response;
+    return fetch(url, options);
   };
 
 export const supabase = createClient<Database>(
