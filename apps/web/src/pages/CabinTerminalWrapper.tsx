@@ -123,7 +123,13 @@ export const CabinTerminalWrapper: React.FC = () => {
   const handlePinAuthorized = () => setMode('PRESTART_REQUIRED');
   
   const handlePreStartCompleted = (passed: boolean) => {
-    if (passed) setMode('OPERATIONS_ACTIVE');
+    if (passed) {
+      setMode('OPERATIONS_ACTIVE');
+    } else {
+      localStorage.removeItem(ASSET_VAULT_KEY);
+      setErrorMessage('MAQUINARIA ENCLAVADA (DANGER TAG). La máquina ha sido inhabilitada por motivos de seguridad y requiere intervención de taller.');
+      setMode('SYSTEM_ERROR');
+    }
   };
 
   const handleShiftTerminated = () => setMode('PIN_REQUIRED');
