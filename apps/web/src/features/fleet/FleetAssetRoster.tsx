@@ -66,7 +66,6 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
   // Filtrado reactivo en memoria
   const filteredAssets = assets.filter((asset) => {
     if (filter === 'ALL') return true;
-    if (filter === 'LOCKED') return asset.status === 'OUT_OF_SERVICE';
     return asset.status === filter;
   });
 
@@ -126,9 +125,8 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
         <div className="flex flex-wrap gap-2 font-mono text-xs">
           {[
             { label: 'TODOS', value: 'ALL' },
-            { label: '🟢 DISPONIBLES', value: 'AVAILABLE' },
-            { label: '🛑 INHABILITADOS (WHS)', value: 'LOCKED' },
-            { label: '🟡 EN TALLER', value: 'IN_MAINTENANCE' },
+            { label: '🟢 DISPONIBLES', value: 'operational' },
+            { label: '🛑 INHABILITADOS / TALLER', value: 'maintenance' },
           ].map((btn) => (
             <button
               key={btn.value}
@@ -166,7 +164,7 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
               </tr>
             ) : (
               filteredAssets.map((asset) => {
-                const isLocked = asset.status === 'OUT_OF_SERVICE';
+                const isLocked = asset.status === 'maintenance';
                 return (
                   <tr
                     key={asset.id}
