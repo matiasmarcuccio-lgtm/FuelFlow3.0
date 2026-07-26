@@ -50,8 +50,9 @@ export const App: React.FC = () => {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw new Error(sessionError.message);
 
-      if (!session) {
+      if (!session || !session.user) {
         setProfile(null);
+        setAuthError('AUTH_REQUIRED');
         setIsLoading(false);
         return;
       }
@@ -64,7 +65,10 @@ export const App: React.FC = () => {
         .single();
 
       if (profileError || !userProfile) {
-        throw new Error('PERFIL_NO_ENCONTRADO: El usuario carece de aduana en la flota minera.');
+        console.error("🛑 FRACTURA EN EL ENRUTADOR:", profileError?.message);
+        setAuthError('AUTH_REQUIRED');
+        setIsLoading(false);
+        return;
       }
 
       // Si un conductor de campo (driver) intenta entrar al Command Center, lo expulsamos a Cabina
