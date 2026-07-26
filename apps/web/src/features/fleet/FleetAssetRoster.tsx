@@ -36,14 +36,14 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
         .from('assets')
         .select(`
           id,
-          name,
-          asset_type,
+          internal_code,
+          category,
           status,
           last_prestart_at,
           asset_lockouts!left(lockout_reason, status)
         `)
         .eq('fleet_id', fleetId)
-        .order('name', { ascending: true });
+        .order('internal_code', { ascending: true });
 
       if (error) throw new Error(error.message);
 
@@ -52,8 +52,8 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
         const activeLock = item.asset_lockouts?.find((l: any) => l.status === 'ACTIVE');
         return {
           id: item.id,
-          name: item.name,
-          asset_type: item.asset_type,
+          name: item.internal_code,
+          asset_type: item.category,
           status: item.status,
           last_prestart_at: item.last_prestart_at,
           active_lockout_reason: activeLock ? activeLock.lockout_reason : 'BLOQUEO NO ESPECIFICADO EN HISTORIAL',
