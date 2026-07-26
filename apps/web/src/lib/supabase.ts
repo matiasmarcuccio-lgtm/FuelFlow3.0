@@ -6,10 +6,10 @@ const rawUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_
 const supabaseUrl = rawUrl.replace(/\/$/, '');
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Diagnostic check to alert the user if the key is corrupted or missing
-if (!supabaseAnonKey || supabaseAnonKey.trim() === '' || supabaseAnonKey === 'undefined') {
-  console.error("DIAGNOSTIC: Supabase Anon Key is missing or invalid. Value seen by Vite:", supabaseAnonKey);
-  // We don't alert here to not block the UI constantly, but we can throw a clearer error
+// Cortacircuitos Criptográfico: Si Vercel no inyecta las llaves, detenemos la app
+// para evitar el bucle infinito de peticiones 400 y 401.
+if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey.trim() === '' || supabaseAnonKey === 'undefined') {
+  console.error("🛑 PARADA DE EMERGENCIA: Faltan las variables VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY en Vercel.");
 }
 
 // Interceptor JWT para Zonas Ciegas:
@@ -51,12 +51,15 @@ const customFetch = async (url: RequestInfo | URL, options?: RequestInit) => {
   return response;
 };
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  global: {
-    fetch: customFetch,
-    headers: {
-      apikey: supabaseAnonKey,
-      Authorization: `Bearer ${supabaseAnonKey}`
-    }
-  },
+export const supabase = createClient<Database>(
+  supabaseUrl || 'https://falsa-url-para-evitar-crash.supabase.co', 
+  supabaseAnonKey || 'llave-falsa-para-evitar-crash', 
+  {
+    global: {
+      fetch: customFetch,
+      headers: {
+        apikey: supabaseAnonKey || 'llave-falsa-para-evitar-crash',
+        Authorization: `Bearer ${supabaseAnonKey || 'llave-falsa-para-evitar-crash'}`
+      }
+    },
 });
