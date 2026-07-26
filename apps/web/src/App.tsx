@@ -11,8 +11,7 @@ type CommandTab = 'ROSTER' | 'AUDIT_LEDGER' | 'SYSTEM_CONFIG';
 
 interface UserProfile {
   id: string;
-  first_name: string;
-  last_name: string;
+  full_name: string;
   role: 'super_admin' | 'fleet_manager' | 'fitter' | 'dispatcher' | 'driver';
   fleet_id: string;
 }
@@ -60,7 +59,7 @@ export const App: React.FC = () => {
       // Paso C: Verificar jurisdicción y rol en la Capa 0
       const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, role, fleet_id')
+        .select('id, full_name, role, fleet_id')
         .eq('id', session.user.id)
         .single();
 
@@ -244,7 +243,7 @@ export const App: React.FC = () => {
         {/* Perfil y Cierre de Sesión */}
         <div className="flex items-center gap-4 text-right w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-900 font-mono">
           <div>
-            <p className="text-xs font-bold text-white uppercase">{profile.first_name} {profile.last_name}</p>
+            <p className="text-xs font-bold text-white uppercase">{profile.full_name}</p>
             <p className="text-[10px] text-blue-400 uppercase font-black">{profile.role}</p>
           </div>
           <button
