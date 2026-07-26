@@ -33,10 +33,6 @@ export const supabase = createClient<Database>(
   supabaseAnonKey || 'llave-falsa-para-evitar-crash', 
   {
     global: {
-      fetch: customFetch,
-      headers: {
-        apikey: supabaseAnonKey || 'llave-falsa-para-evitar-crash',
-        Authorization: `Bearer ${supabaseAnonKey || 'llave-falsa-para-evitar-crash'}`
-      }
+      fetch: customFetch
     },
 });
