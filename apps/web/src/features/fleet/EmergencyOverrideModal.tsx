@@ -47,8 +47,8 @@ export const EmergencyOverrideModal: React.FC<EmergencyOverrideModalProps> = ({
       // Éxito: el servidor limpió el activo e inyectó la traza forense
       onSuccess(data as BreakGlassResponse);
       onClose();
-    } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Error al ejecutar la ruptura de candado WHS';
+    } catch (err: any) {
+      const errorMessage = err?.message || (err instanceof Error ? err.message : 'Error al ejecutar la ruptura de candado WHS');
       setError(errorMessage);
     } finally {
       setLoading(false);
