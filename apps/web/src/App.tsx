@@ -12,8 +12,9 @@ type CommandTab = 'ROSTER' | 'AUDIT_LEDGER' | 'SYSTEM_CONFIG';
 interface UserProfile {
   id: string;
   full_name: string;
-  role: 'super_admin' | 'fleet_manager' | 'fitter' | 'dispatcher' | 'driver';
+  role: 'super_admin' | 'fleet_manager' | 'fitter' | 'dispatcher' | 'driver' | 'account_owner';
   fleet_id: string;
+  email?: string;
 }
 
 const DEVICE_PURPOSE_KEY = 'jitsite_device_purpose_latch';
@@ -80,7 +81,10 @@ export const App: React.FC = () => {
         return;
       }
 
-      setProfile(userProfile as UserProfile);
+      setProfile({
+        ...userProfile,
+        email: session.user.email
+      } as UserProfile);
       setIsLoading(false);
 
     } catch (err: any) {
@@ -195,6 +199,39 @@ export const App: React.FC = () => {
   if (!profile) {
     // Si no hay sesión en el Command Center, forzamos login satelital a través del componente real
     return <CommandCenterLogin onBackToSelector={executeDevicePurge} />;
+  }
+
+  // 🛑 COMPUERTA DE AISLAMIENTO FINANCIERO (ZERO-TRUST)
+  if (profile && profile.role === 'account_owner') {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6">
+        <div className="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-400 mb-6 text-2xl">
+            💳
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight mb-2">Portal de Suscripción y Facturación</h1>
+          <p className="text-slate-400 text-sm mb-6">
+            Identidad comercial verificada ({profile.email}). Como Dueño de Cuenta, su jurisdicción está limitada estrictamente a la gestión de membresías metradas, métodos de pago en Stripe y descarga de reportes fiscales pasivos para la ATO.
+          </p>
+          
+          {/* Aquí insertaremos el componente <BillingPortal /> en el Conducto 3 */}
+          <div className="p-6 bg-slate-950/50 border border-slate-800/80 rounded-lg mb-6 text-left">
+            <div className="text-xs font-mono text-slate-500 uppercase tracking-wider mb-1">Estado de Bóveda</div>
+            <div className="text-lg font-semibold text-emerald-400 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              OPERATIVA (Suscripción Activa)
+            </div>
+          </div>
+
+          <button 
+            onClick={() => supabase.auth.signOut()} 
+            className="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-lg transition-colors border border-slate-700 text-sm"
+          >
+            Cerrar Sesión Comercial
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // ENCLAVAMIENTO DE ROLES: Verificar quién tiene permiso para ver qué tablero
