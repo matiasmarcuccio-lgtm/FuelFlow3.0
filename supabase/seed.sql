@@ -17,8 +17,8 @@ DECLARE
     
     v_license_id UUID := 'f5555555-0000-0000-0000-000000000001';
 
-    -- Hash estándar de contraseña ('password123') para autenticación
-    v_password_hash TEXT := '$2a$10$wT2B.01uR4/8TqLz9x6V.O.s08.wDk1/lH3j.4t/Z7C72213M9sA.';
+    -- Hash dinámico usando pgcrypto para máxima compatibilidad con GoTrue
+    v_password_hash TEXT := crypt('password123', gen_salt('bf'));
 BEGIN
     RAISE NOTICE '🌱 Iniciando Sembrado Comercial B2B para JITSite Hobart...';
 

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { FitterReleaseModal } from '../maintenance/FitterReleaseModal';
 import { TokenGeneratorModal } from './TokenGeneratorModal';
+import { EmergencyOverrideModal } from './EmergencyOverrideModal';
 
 interface AssetRow {
   id: string;
@@ -24,6 +25,10 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
   
   // Estado para controlar qué activo se inyecta en el Modal del Mecánico
   const [selectedAssetForRelease, setSelectedAssetForRelease] = useState<AssetRow | null>(null);
+
+  // Estado para el Break-Glass Gerencial
+  const [overrideModalOpen, setOverrideModalOpen] = useState(false);
+  const [selectedAssetForOverride, setSelectedAssetForOverride] = useState<AssetRow | null>(null);
 
   // Estado para el provisionamiento de tablets (Zero-Trust Token)
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
@@ -216,21 +221,35 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
                         : 'SIN REGISTRO'}
                     </td>
 
-                    {/* Columna 5: Aduana de Acción (RBAC + Gating) */}
-                    <td className="py-4 px-4 text-right">
-                      {isLocked && canAuthorizeRelease ? (
-                        <button
-                          type="button"
-                          onClick={() => setSelectedAssetForRelease(asset)}
-                          className="bg-red-600 hover:bg-red-500 text-black font-black px-4 py-3 rounded-xl uppercase tracking-widest text-[10px] shadow-xl hover:shadow-red-600/30 transition-all flex items-center justify-end gap-2 ml-auto animate-bounce"
-                        >
-                          <span>🔧 LIBERAR WHS</span>
-                        </button>
-                      ) : isLocked ? (
-                        <span className="text-[10px] text-slate-600 uppercase font-bold">
-                          [SOLO FITTERS / TALLER]
-                        </span>
-                      ) : (
+                    {/* CELDA DE ACCIÓN LEGAL WHS EN EL ROSTER */}
+                    <td className="p-4 text-right">
+                      {isLocked && (
+                        <>
+                          {userRole === 'fitter' ? (
+                            <button
+                              onClick={() => setSelectedAssetForRelease(asset)}
+                              className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded text-xs transition-colors shadow"
+                            >
+                              🔧 LIBERAR WHS
+                            </button>
+                          ) : userRole === 'fleet_manager' ? (
+                            <button
+                              onClick={() => {
+                                setSelectedAssetForOverride(asset);
+                                setOverrideModalOpen(true);
+                              }}
+                              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded text-xs transition-colors shadow-lg animate-pulse"
+                            >
+                              ⚠️ RUPTURA WHS
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-mono text-slate-500 uppercase bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                              🔒 Bloqueado por Taller
+                            </span>
+                          )}
+                        </>
+                      )}
+                      {!isLocked && (
                         <span className="text-[10px] text-slate-700 uppercase">
                           — SIN ACCIÓN —
                         </span>
@@ -259,6 +278,20 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
           assetName={selectedAssetForRelease.name}
           lockoutReason={selectedAssetForRelease.active_lockout_reason || 'INHABILITACIÓN WHS'}
           onReleasedSuccess={handleReleaseSuccess}
+        />
+      )}
+
+      {/* INYECCIÓN DEL MODAL DE RUPTURA WHS (BREAK-GLASS) */}
+      {selectedAssetForOverride && (
+        <EmergencyOverrideModal
+          isOpen={overrideModalOpen}
+          onClose={() => setOverrideModalOpen(false)}
+          assetId={selectedAssetForOverride.id}
+          assetCode={selectedAssetForOverride.name}
+          onSuccess={(data) => {
+            console.log('Break-Glass exitoso:', data);
+            queryClient.invalidateQueries({ queryKey: ['fleet_assets_roster'] });
+          }}
         />
       )}
 
