@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { OverrideReason, BreakGlassResponse } from '../../types/whs.types';
+import type { OverrideReason, BreakGlassResponse } from '../../types/whs.types';
 
 interface EmergencyOverrideModalProps {
   isOpen: boolean;
@@ -47,8 +47,9 @@ export const EmergencyOverrideModal: React.FC<EmergencyOverrideModalProps> = ({
       // Éxito: el servidor limpió el activo e inyectó la traza forense
       onSuccess(data as BreakGlassResponse);
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Error al ejecutar la ruptura de candado WHS');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al ejecutar la ruptura de candado WHS';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

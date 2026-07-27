@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { BillingProjectSite } from '../../types/whs.types';
+import type { BillingProjectSite } from '../../types/whs.types';
 
 export const BillingPortal: React.FC<{ userEmail: string }> = ({ userEmail }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [projects, setProjects] = useState<BillingProjectSite[]>([]);
   const [activeAssetDays, setActiveAssetDays] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchBillingOverview();
-  }, []);
 
   const fetchBillingOverview = async () => {
     try {
@@ -32,10 +28,15 @@ export const BillingPortal: React.FC<{ userEmail: string }> = ({ userEmail }) =>
       if (!ledgerError && ledgerData && ledgerData.length > 0) {
         setActiveAssetDays(ledgerData[0].active_asset_count);
       }
-    } catch (err: any) {
-      setError(err.message || 'Error cargando métricas de facturación');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error cargando métricas de facturación';
+      setError(errorMessage);
     }
   };
+
+  useEffect(() => {
+    fetchBillingOverview();
+  }, []);
 
   const handleOpenStripePortal = async () => {
     setLoading(true);
@@ -48,8 +49,9 @@ export const BillingPortal: React.FC<{ userEmail: string }> = ({ userEmail }) =>
       if (data?.url) {
         window.location.href = data.url; // Redirección segura a Stripe PCI-DSS
       }
-    } catch (err: any) {
-      setError('No se pudo conectar con el servidor bancario: ' + err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      setError('No se pudo conectar con el servidor bancario: ' + errorMessage);
       setLoading(false);
     }
   };
