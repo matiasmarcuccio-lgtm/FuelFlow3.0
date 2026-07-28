@@ -29,7 +29,48 @@ serve(async (req: Request) => {
     // 2. MÁQUINA DE ESTADOS FINANCIEROS Y LEGALES
     // NOTA CIRUGÍA: Usamos status: 'active', 'past_due' y 'canceled' en minúscula
     switch (event.type) {
-      // A. EL PAGO FUE EXITOSO (Suscripción al día)
+      // A. CAPTURA DE TARJETA EXITOSA -> CREAR FLOTA Y ASCENDER A DUEÑO
+      case 'setup_intent.succeeded': {
+        const setupIntent = event.data.object as Stripe.SetupIntent;
+        const customerId = setupIntent.customer as string;
+        const paymentMethodId = setupIntent.payment_method as string;
+        
+        const supabaseUid = setupIntent.metadata?.supabase_uid;
+        const fleetName = setupIntent.metadata?.fleet_name;
+
+        if (!supabaseUid || !fleetName) {
+          throw new Error(`METADATOS FALTANTES: SetupIntent ${setupIntent.id} carece de anclaje Supabase.`);
+        }
+
+        // 1. PASO CRÍTICO: Fijar la tarjeta como método de pago por defecto en el cliente
+        await stripe.customers.update(customerId, {
+          invoice_settings: { default_payment_method: paymentMethodId },
+        });
+
+        // 2. Suscribir al cliente al plan metrado de pago por uso (Flota Operativa)
+        const subscription = await stripe.subscriptions.create({
+          customer: customerId,
+          items: [{ price: Deno.env.get('STRIPE_METERED_PRICE_ID') }],
+          metadata: { supabase_uid: supabaseUid }
+        });
+
+        // 3. Ejecutar promoción relacional y creación de mina en 1 sola transacción ACID
+        const { error: rpcError } = await adminClient.rpc('fn_promote_to_account_owner', {
+          p_user_uid: supabaseUid,
+          p_fleet_name: fleetName,
+          p_stripe_customer_id: customerId,
+          p_stripe_subscription_id: subscription.id
+        });
+
+        if (rpcError) {
+          console.error(`FALLO FATAL EN PROMOCIÓN SQL PARA UID ${supabaseUid}:`, rpcError.message);
+          throw rpcError;
+        }
+
+        break;
+      }
+
+      // B. EL PAGO FUE EXITOSO (Suscripción al día)
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice;
         const customerId = invoice.customer as string;
