@@ -46,7 +46,7 @@ BEGIN
             SELECT 
                 l.created_at AT TIME ZONE 'Australia/Hobart' AS timestamp_aest,
                 l.actor_uid AS gerente_ejecutor_uid,
-                p.email AS gerente_email,
+                p.full_name AS gerente_nombre,
                 l.target_record_id AS lockout_id_afectado,
                 l.payload_after->>'asset_id' AS vehiculo_id,
                 l.payload_after->>'victim_operator_uid' AS tecnico_atropellado_uid,

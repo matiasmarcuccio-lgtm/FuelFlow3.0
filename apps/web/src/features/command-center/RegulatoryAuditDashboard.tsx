@@ -29,13 +29,13 @@ export const RegulatoryAuditDashboard: React.FC = () => {
         return;
       }
       
-      const headers = ['Timestamp AEST', 'Gerente UID', 'Email', 'ID Candado', 'Vehiculo ID', 'Tecnico Victima UID', 'Motivo Declarado'];
+      const headers = ['Timestamp AEST', 'Gerente UID', 'Nombre', 'ID Candado', 'Vehiculo ID', 'Tecnico Victima UID', 'Motivo Declarado'];
       const csvContent = [
         headers.join(','),
         ...rows.map((r: any) => [
           `"${r.timestamp_aest}"`,
           `"${r.gerente_ejecutor_uid}"`,
-          `"${r.gerente_email}"`,
+          `"${r.gerente_nombre}"`,
           `"${r.lockout_id_afectado}"`,
           `"${r.vehiculo_id}"`,
           `"${r.tecnico_atropellado_uid}"`,
