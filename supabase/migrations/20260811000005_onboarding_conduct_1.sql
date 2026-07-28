@@ -43,9 +43,9 @@ BEGIN
     END IF;
 
     INSERT INTO public.profiles (
-        id, email, full_name, role, fleet_id, created_at
+        id, full_name, role, fleet_id, created_at
     ) VALUES (
-        NEW.id, NEW.email, COALESCE(NEW.raw_user_meta_data->>'full_name', 'Usuario Minero'),
+        NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', 'Usuario Minero'),
         v_role, v_fleet_id, NOW()
     );
     RETURN NEW;
