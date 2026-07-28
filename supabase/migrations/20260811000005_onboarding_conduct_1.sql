@@ -6,7 +6,7 @@ BEGIN;
 -- 1. Actualizar restricción de roles para admitir el limbo de onboarding
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
 ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check 
-CHECK (role IN ('super_admin', 'fleet_manager', 'fitter', 'driver', 'account_owner', 'pending_onboarding'));
+CHECK (role IN ('super_admin', 'fleet_manager', 'fitter', 'driver', 'account_owner', 'pending_onboarding', 'dispatcher', 'supervisor', 'suspended'));
 
 -- 2. Restricción condicional: fleet_id solo puede ser NULL si el rol es pending_onboarding o super_admin
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS chk_profiles_fleet_id_not_null;
