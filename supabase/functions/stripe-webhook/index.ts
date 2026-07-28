@@ -1,107 +1,107 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import Stripe from 'https://esm.sh/stripe@12.18.0?target=deno'
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') as string, {
-  apiVersion: '2022-11-15',
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
+  apiVersion: '2023-10-16',
   httpClient: Stripe.createFetchHttpClient(),
-})
+});
 
-const cryptoProvider = Stripe.createSubtleCryptoProvider()
+const cryptoProvider = Stripe.createSubtleCryptoProvider();
+const endpointSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '';
 
-serve(async (req) => {
+serve(async (req: Request) => {
+  const signature = req.headers.get('Stripe-Signature');
+  if (!signature) {
+    return new Response('SIN_FIRMA: Petición carece de cabecera criptográfica de Stripe.', { status: 400 });
+  }
+
   try {
-    const signature = req.headers.get('Stripe-Signature')
+    const body = await req.text();
+    // 1. Validación estricta PCI-DSS: Verificamos que el payload realmente provenga de Stripe
+    const event = await stripe.webhooks.constructEventAsync(body, signature, endpointSecret, undefined, cryptoProvider);
 
-    if (!signature) {
-      return new Response('No signature provided', { status: 400 })
-    }
-
-    const body = await req.text()
-    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') as string
-    let event
-
-    try {
-      event = await stripe.webhooks.constructEventAsync(
-        body,
-        signature,
-        webhookSecret,
-        undefined,
-        cryptoProvider
-      )
-    } catch (err: any) {
-      console.error(`Webhook signature verification failed. ${err.message}`)
-      return new Response(err.message, { status: 400 })
-    }
-
-    // Initialize Supabase client
-    const supabase = createClient(
+    const adminClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    );
 
-    // Handle the event
+    // 2. MÁQUINA DE ESTADOS FINANCIEROS Y LEGALES
+    // NOTA CIRUGÍA: Usamos status: 'active', 'past_due' y 'canceled' en minúscula
     switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        const fleetId = session.client_reference_id
-        
-        if (fleetId) {
-          await supabase
-            .from('fleets')
-            .update({
-              stripe_customer_id: session.customer as string,
-              stripe_subscription_id: session.subscription as string,
-              status: 'active'
-            })
-            .eq('id', fleetId)
-        }
-        break
-      }
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription
-        await supabase
-          .from('fleets')
-          .update({ status: 'canceled' })
-          .eq('stripe_subscription_id', subscription.id)
-        break
-      }
-      case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription
-        
-        let newStatus = 'active'
-        if (subscription.status === 'past_due' || subscription.status === 'unpaid') {
-          newStatus = 'past_due'
-        } else if (subscription.status === 'canceled') {
-          newStatus = 'canceled'
-        }
+      // A. EL PAGO FUE EXITOSO (Suscripción al día)
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = invoice.customer as string;
 
-        await supabase
+        // Limpiar el período de gracia en la flota y devolverla al estado operativo
+        await adminClient
           .from('fleets')
-          .update({ status: newStatus })
-          .eq('stripe_subscription_id', subscription.id)
-        break
+          .update({ 
+            status: 'active', 
+            grace_period_until: null 
+          })
+          .eq('stripe_customer_id', customerId);
+
+        // Si pagaron por bóvedas pasivas, restaurar su acceso fiscal para la ATO
+        await adminClient
+          .from('project_sites')
+          .update({ vault_status: 'OPERATIONAL', purge_scheduled_for: null })
+          .eq('vault_status', 'VAULT_DELINQUENT')
+          .in('fleet_id', (
+            await adminClient.from('fleets').select('id').eq('stripe_customer_id', customerId)
+          ).data?.map(f => f.id) || []);
+
+        break;
       }
+
+      // B. EL PAGO FRACASÓ (Tarjeta rebotada, sin fondos o cuenta congelada)
       case 'invoice.payment_failed': {
-        const invoice = event.data.object as Stripe.Invoice
-        if (invoice.subscription) {
-          await supabase
-            .from('fleets')
-            .update({ status: 'past_due' })
-            .eq('stripe_subscription_id', invoice.subscription as string)
-        }
-        break
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = invoice.customer as string;
+
+        // 1. Inyectar el amortiguador de gracia de 72 horas para operaciones en terreno
+        const graceDate = new Date();
+        graceDate.setHours(graceDate.getHours() + 72);
+
+        await adminClient
+          .from('fleets')
+          .update({ 
+            status: 'past_due', 
+            grace_period_until: graceDate.toISOString() 
+          })
+          .eq('stripe_customer_id', customerId);
+
+        // 2. Sellar instantáneamente la Bóveda Pasiva (Sin periodo de gracia para descargas de $29 AUD)
+        await adminClient
+          .from('project_sites')
+          .update({ vault_status: 'VAULT_DELINQUENT' })
+          .eq('status', 'ARCHIVED')
+          .in('fleet_id', (
+            await adminClient.from('fleets').select('id').eq('stripe_customer_id', customerId)
+          ).data?.map(f => f.id) || []);
+
+        break;
       }
-      default:
-        console.log(`Unhandled event type ${event.type}`)
+
+      // C. LA SUSCRIPCIÓN FUE CANCELADA ABSOLUTAMENTE (Fin de contrato)
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const customerId = subscription.customer as string;
+
+        await adminClient
+          .from('fleets')
+          .update({ status: 'canceled', grace_period_until: null })
+          .eq('stripe_customer_id', customerId);
+          
+        break;
+      }
     }
 
-    return new Response(JSON.stringify({ received: true }), {
-      headers: { 'Content-Type': 'application/json' },
-      status: 200,
-    })
+    return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+
   } catch (err: any) {
-    console.error(err)
-    return new Response(err.message, { status: 400 })
+    console.error('Error de validación en Webhook:', err.message);
+    return new Response(`Error de Aduana Webhook: ${err.message}`, { status: 400 });
   }
-})
+});

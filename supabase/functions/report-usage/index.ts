@@ -7,84 +7,92 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
   httpClient: Stripe.createFetchHttpClient(),
 });
 
+// El ID de PRECIO (price_...) del producto metrado que acabas de crear en Stripe
+const METERED_PRICE_ID = Deno.env.get('STRIPE_METERED_PRICE_ID') ?? '';
+
 serve(async (req: Request) => {
   try {
-    const supabaseClient = createClient(
+    // Esta función se ejecutará como una tarea de sistema aislada (Service Role)
+    const adminClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // 1. Obtener todos los registros del fleet_billing_ledger que aún no han sido reportados a Stripe
-    // (es decir, stripe_usage_record_id es null)
-    const { data: ledgers, error: ledgerError } = await supabaseClient
+    // 1. Extraer los consumos sellados en la sombra o en vivo que aún no se reportan al banco
+    // NOTA CIRUGÍA: Usamos 'status' en minúscula para alinearnos con el enum real de PostgreSQL
+    const { data: unreportedLedgers, error: ledgerError } = await adminClient
       .from('fleet_billing_ledger')
-      .select(`
-        id,
-        fleet_id,
-        active_asset_count,
-        recorded_date,
-        fleets (
-          stripe_customer_id,
-          billing_contracts ( stripe_subscription_item_id, status )
-        )
-      `)
-      .is('stripe_usage_record_id', null);
+      .select('id, fleet_id, billing_date, active_asset_count, fleets(stripe_subscription_id, status)')
+      .eq('stripe_reported', false)
+      .gt('active_asset_count', 0); // No reportamos días con 0 camiones para ahorrar llamadas API
 
     if (ledgerError) throw ledgerError;
+    if (!unreportedLedgers || unreportedLedgers.length === 0) {
+      return new Response(JSON.stringify({ message: "No hay consumos pendientes de emisión." }), { status: 200 });
+    }
 
-    const results = [];
+    const reportResults = [];
 
-    // 2. Iterar sobre las fotografías diarias y transmitirlas a Stripe
-    for (const ledger of ledgers || []) {
-      const fleet = ledger.fleets as any;
-      
-      // Buscar el contrato de facturación activo
-      const activeContract = fleet?.billing_contracts?.find((c: any) => c.status === 'ACTIVE');
-      const subItemId = activeContract?.stripe_subscription_item_id;
+    // 2. Iterar sobre cada fotografía de consumo diaria por flota
+    for (const record of unreportedLedgers) {
+      const fleet = (record as any).fleets;
+      const subId = fleet?.stripe_subscription_id;
 
-      if (!subItemId) {
-        console.warn(`Flota ${ledger.fleet_id} no tiene un subscription_item_id activo. Saltando...`);
+      // Si la flota no tiene suscripción activa en Stripe (o sigue en prueba pura local), la saltamos
+      if (!subId || fleet.status !== 'active') {
+        reportResults.push({ ledger_id: record.id, status: 'SKIPPED_NO_ACTIVE_SUBSCRIPTION' });
         continue;
       }
 
       try {
-        // 3. Emitir el Stripe Usage Record
+        // A. Consultar a Stripe para encontrar cuál ítem de la suscripción corresponde al precio metrado
+        const subscription = await stripe.subscriptions.retrieve(subId);
+        const meteredItem = subscription.items.data.find(
+          (item) => item.price.id === METERED_PRICE_ID
+        );
+
+        if (!meteredItem) {
+          throw new Error(`La suscripción ${subId} carece del ítem de cobro metrado (${METERED_PRICE_ID}).`);
+        }
+
+        // B. Convertir la fecha de facturación a Unix Timestamp (mediodía AEST de esa fecha para evitar bordes UTC)
+        const unixTimestamp = Math.floor(new Date(`${record.billing_date}T12:00:00+10:00`).getTime() / 1000);
+
+        // C. Enviar la telemetría bancaria con acción INCREMENT para que Stripe lo sume al mes
         const usageRecord = await stripe.subscriptionItems.createUsageRecord(
-          subItemId,
+          meteredItem.id,
           {
-            quantity: ledger.active_asset_count,
-            timestamp: Math.floor(new Date(ledger.recorded_date).getTime() / 1000),
-            action: 'set', // Reemplaza cualquier registro previo de este timestamp exacto
-          },
-          {
-            // Idempotency key estricta basada en el fleet y la fecha para no duplicar cobros si hay reintentos
-            idempotencyKey: `usage_${ledger.fleet_id}_${ledger.recorded_date}`
+            quantity: record.active_asset_count,
+            timestamp: unixTimestamp,
+            action: 'increment',
           }
         );
 
-        // 4. Marcar el ledger como reportado en PostgreSQL
-        await supabaseClient
+        // D. Marcar en la base de datos que este día ya fue facturado al banco con éxito
+        await adminClient
           .from('fleet_billing_ledger')
-          .update({ stripe_usage_record_id: usageRecord.id })
-          .eq('id', ledger.id);
+          .update({ stripe_reported: true })
+          .eq('id', record.id);
 
-        results.push({
-          fleet_id: ledger.fleet_id,
-          date: ledger.recorded_date,
-          usage_record_id: usageRecord.id
+        reportResults.push({ 
+          ledger_id: record.id, 
+          status: 'SUCCESS', 
+          stripe_usage_id: usageRecord.id,
+          quantity: record.active_asset_count 
         });
-      } catch (stripeErr: any) {
-        console.error(`Stripe Usage Error para flota ${ledger.fleet_id}:`, stripeErr);
+
+      } catch (err: any) {
+        console.error(`Fallo emitiendo consumo para ledger ${record.id}:`, err.message);
+        reportResults.push({ ledger_id: record.id, status: 'ERROR', error: err.message });
       }
     }
 
-    return new Response(JSON.stringify({ success: true, processed: results.length, details: results }), {
+    return new Response(JSON.stringify({ processed: reportResults.length, results: reportResults }), {
       headers: { 'Content-Type': 'application/json' },
       status: 200,
     });
 
   } catch (error: any) {
-    console.error('Fatal Error en report-usage:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { 'Content-Type': 'application/json' },
       status: 500,
