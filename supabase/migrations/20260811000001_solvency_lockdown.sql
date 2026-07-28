@@ -15,7 +15,7 @@ DECLARE
     v_grace TIMESTAMPTZ;
 BEGIN
     -- CIRUGÍA: Usamos la columna "status" que es el nombre real en public.fleets
-    SELECT UPPER(status), grace_period_until 
+    SELECT UPPER(status::text), grace_period_until 
     INTO v_status, v_grace
     FROM public.fleets 
     WHERE id = NEW.fleet_id;
@@ -62,8 +62,8 @@ DECLARE
 BEGIN
     -- CIRUGÍA: Usamos la columna "status" que es el nombre real en public.fleets
     SELECT CASE 
-        WHEN UPPER(status) IN ('ACTIVE', 'TRIAL', 'TRIALING') THEN true
-        WHEN UPPER(status) = 'PAST_DUE' AND grace_period_until IS NOT NULL AND NOW() <= grace_period_until THEN true
+        WHEN UPPER(status::text) IN ('ACTIVE', 'TRIAL', 'TRIALING') THEN true
+        WHEN UPPER(status::text) = 'PAST_DUE' AND grace_period_until IS NOT NULL AND NOW() <= grace_period_until THEN true
         ELSE false
     END INTO v_can_operate
     FROM public.fleets
