@@ -9,6 +9,7 @@ ALTER TABLE public.profiles ADD CONSTRAINT profiles_role_check
 CHECK (role IN ('super_admin', 'fleet_manager', 'fitter', 'driver', 'account_owner', 'pending_onboarding', 'dispatcher', 'supervisor', 'suspended'));
 
 -- 2. Restricción condicional: fleet_id solo puede ser NULL si el rol es pending_onboarding o super_admin
+ALTER TABLE public.profiles ALTER COLUMN fleet_id DROP NOT NULL;
 ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS chk_profiles_fleet_id_not_null;
 ALTER TABLE public.profiles ADD CONSTRAINT chk_profiles_fleet_id_not_null
 CHECK (
