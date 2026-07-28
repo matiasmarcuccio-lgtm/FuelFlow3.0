@@ -30,7 +30,7 @@ export const RegulatoryAuditDashboard: React.FC = () => {
       }
       
       const headers = ['Timestamp AEST', 'Gerente UID', 'Nombre', 'ID Candado', 'Vehiculo ID', 'Tecnico Victima UID', 'Motivo Declarado'];
-      const csvContent = [
+      const csvContent = "sep=,\r\n" + [
         headers.join(','),
         ...rows.map((r: any) => [
           `"${r.timestamp_aest}"`,
@@ -41,9 +41,9 @@ export const RegulatoryAuditDashboard: React.FC = () => {
           `"${r.tecnico_atropellado_uid}"`,
           `"${r.motivo_worksafe}"`
         ].join(','))
-      ].join('\\n');
+      ].join('\r\n');
       
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
