@@ -23,6 +23,7 @@ const calculateEffortScore = (text: string) => {
 
 export const ComplianceReport = () => {
   const [resolvedAnomalies, setResolvedAnomalies] = useState<any[]>([]);
+  const [exportingLoto, setExportingLoto] = useState(false);
 
   useEffect(() => {
     fetchResolvedAnomalies();
@@ -38,6 +39,50 @@ export const ComplianceReport = () => {
     
     if (!error && data) {
       setResolvedAnomalies(data);
+    }
+  };
+
+  const handleExportLotoCSV = async () => {
+    setExportingLoto(true);
+    try {
+      const { data, error } = await supabase.rpc('fn_export_regulatory_report', { p_report_type: 'WHS_BREAK_GLASS_AUDIT' });
+      if (error) throw error;
+      
+      const rows = data.data || [];
+      if (rows.length === 0) {
+        alert('No hay registros de Ruptura WHS en esta flota.');
+        return;
+      }
+      
+      // Construir CSV
+      const headers = ['Timestamp AEST', 'Gerente UID', 'Email', 'ID Candado', 'Vehiculo ID', 'Tecnico Victima UID', 'Motivo Declarado'];
+      const csvContent = [
+        headers.join(','),
+        ...rows.map((r: any) => [
+          `"${r.timestamp_aest}"`,
+          `"${r.gerente_ejecutor_uid}"`,
+          `"${r.gerente_email}"`,
+          `"${r.lockout_id_afectado}"`,
+          `"${r.vehiculo_id}"`,
+          `"${r.tecnico_atropellado_uid}"`,
+          `"${r.motivo_worksafe}"`
+        ].join(','))
+      ].join('\\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `WorkSafe_Audit_Lockout_Overrides_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error al exportar reporte forense WHS');
+    } finally {
+      setExportingLoto(false);
     }
   };
 
@@ -65,6 +110,23 @@ export const ComplianceReport = () => {
           </div>
         </div>
       )}
+
+      <div className="bg-slate-900 border border-purple-500/50 p-4 rounded-lg mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div>
+          <h2 className="text-lg font-bold text-purple-400 flex items-center gap-2">
+            <ShieldAlert className="w-5 h-5" /> Cadena de Custodia LOTO (WorkSafe)
+          </h2>
+          <p className="text-sm text-slate-300">Auditoría inmutable de todas las rupturas de candados (Break-Glass) ejecutadas por gerencia.</p>
+        </div>
+        <button 
+          onClick={handleExportLotoCSV}
+          disabled={exportingLoto}
+          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded flex items-center gap-2 transition-colors text-sm whitespace-nowrap"
+        >
+          <Download className="w-4 h-4" /> 
+          {exportingLoto ? 'Extrayendo...' : '🚨 Descargar Bitácora WHS (CSV)'}
+        </button>
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
         <div className="bg-card shadow-lg p-4 rounded-lg">
