@@ -18,15 +18,17 @@ export const CommandCenterLogin: React.FC<CommandCenterLoginProps> = ({ onBackTo
     setErrorMsg(null);
 
     try {
+      const cleanEmail = email.trim().toLowerCase();
+      
       if (mode === 'LOGIN') {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: cleanEmail,
           password,
         });
         if (error) throw new Error(error.message);
       } else {
         const { error, data } = await supabase.auth.signUp({
-          email,
+          email: cleanEmail,
           password,
           options: {
             data: { 
