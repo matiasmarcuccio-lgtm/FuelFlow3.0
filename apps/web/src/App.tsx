@@ -227,7 +227,7 @@ export const App: React.FC = () => {
             JITSITE COMMAND CENTER
           </span>
           <span className="font-mono text-xs text-slate-400 uppercase hidden md:inline">
-            JURISDICCIÓN: #{profile.fleet_id.slice(0, 8)} • HOBART AEST
+            JURISDICCIÓN: #{profile.fleet_id ? profile.fleet_id.slice(0, 8) : 'GLOBAL'} • HOBART AEST
           </span>
         </div>
 
