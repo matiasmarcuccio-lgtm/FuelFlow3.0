@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { OverrideReason, BreakGlassResponse } from '../../types/whs.types';
 
@@ -23,6 +23,15 @@ export const EmergencyOverrideModal: React.FC<EmergencyOverrideModalProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // El Escrutinio del Ciclo de Vida: Purgar estados huérfanos al abrir el modal
+  useEffect(() => {
+    if (isOpen) {
+      setReason('');
+      setPin('');
+      setAffidavitChecked(false);
+      setError(null);
+    }
+  }, [isOpen]);
   if (!isOpen) return null;
 
   const handleExecuteBreakGlass = async (e: React.FormEvent) => {
