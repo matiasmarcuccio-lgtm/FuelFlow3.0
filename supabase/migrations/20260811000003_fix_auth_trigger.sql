@@ -1,5 +1,5 @@
 -- ============================================================================
--- MIGRACIÓN: CORRECCIÓN DEL TRIGGER DE AUTENTICACIÓN
+-- MIGRACIÓN: PARCHE BULLETPROOF PARA TRIGGER DE AUTENTICACIÓN
 -- ============================================================================
 BEGIN;
 
@@ -8,13 +8,24 @@ RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public
 AS $$
+DECLARE
+  v_fleet_id UUID;
 BEGIN
-  -- Insertamos el ID idéntico de Auth y asignamos el rol de Manager por defecto (en minúsculas para respetar el constraint)
-  INSERT INTO public.profiles (id, role, full_name)
+  -- Intentar obtener la flota desde los metadatos (como lo hace el Frontend)
+  v_fleet_id := (NEW.raw_user_meta_data->>'fleet_id')::uuid;
+  
+  -- PARCHE: Si se está creando el usuario manualmente desde el panel de Supabase (UI),
+  -- los metadatos vienen vacíos. Asignamos a la fuerza la flota de Hobart.
+  IF v_fleet_id IS NULL THEN
+     v_fleet_id := 'f1ee7000-0000-4000-8000-000000000001'::uuid;
+  END IF;
+
+  INSERT INTO public.profiles (id, role, full_name, fleet_id)
   VALUES (
     NEW.id, 
-    'fleet_manager', 
-    NEW.raw_user_meta_data->>'full_name'
+    'account_owner', 
+    COALESCE(NEW.raw_user_meta_data->>'full_name', 'Thomas Shelby'),
+    v_fleet_id
   );
   RETURN NEW;
 END;
