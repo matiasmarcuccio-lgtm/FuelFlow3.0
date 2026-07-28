@@ -9,7 +9,6 @@ DECLARE
     v_fleet_id UUID := 'f1ee7000-0000-4000-8000-000000000001';
     
     -- Usuarios Auth
-    v_owner_id UUID := 'e0000000-0000-4000-8000-000000000000';
     v_admin_id UUID := 'a1111111-0000-4000-8000-000000000000';
     v_manager_id UUID := 'b2222222-0000-4000-8000-000000000000';
     v_dispatcher_id UUID := 'c3333333-0000-4000-8000-000000000000';
@@ -32,7 +31,6 @@ BEGIN
     ON CONFLICT (id) DO NOTHING;
     INSERT INTO auth.users (id, aud, role, email, encrypted_password, email_confirmed_at, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
     VALUES
-        (v_owner_id, 'authenticated', 'authenticated', 'owner@hobartquarry.com', v_password_hash, now(), '{"provider": "email", "providers": ["email"]}', json_build_object('fleet_id', v_fleet_id)::jsonb, now(), now()),
         (v_admin_id, 'authenticated', 'authenticated', 'admin@jitsite.com', v_password_hash, now(), '{"provider": "email", "providers": ["email"]}', json_build_object('fleet_id', v_fleet_id)::jsonb, now(), now()),
         (v_manager_id, 'authenticated', 'authenticated', 'manager@hobartquarry.com', v_password_hash, now(), '{"provider": "email", "providers": ["email"]}', json_build_object('fleet_id', v_fleet_id)::jsonb, now(), now()),
         (v_dispatcher_id, 'authenticated', 'authenticated', 'weighbridge@hobartquarry.com', v_password_hash, now(), '{"provider": "email", "providers": ["email"]}', json_build_object('fleet_id', v_fleet_id)::jsonb, now(), now()),
@@ -46,7 +44,6 @@ BEGIN
     -- ========================================================================
     INSERT INTO public.profiles (id, fleet_id, role, full_name, pin_hash)
     VALUES
-        (v_owner_id, v_fleet_id, 'account_owner', 'Thomas Shelby', crypt('1234', gen_salt('bf', 4))),
         (v_admin_id, v_fleet_id, 'super_admin', 'JITSite Admin', crypt('1234', gen_salt('bf', 4))),
         (v_manager_id, v_fleet_id, 'fleet_manager', 'Arthur Shelby', crypt('1234', gen_salt('bf', 4))),
         (v_dispatcher_id, v_fleet_id, 'dispatcher', 'Weighbridge Operator', crypt('1234', gen_salt('bf', 4))),
