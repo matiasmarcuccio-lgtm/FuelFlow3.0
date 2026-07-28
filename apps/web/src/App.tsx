@@ -5,6 +5,7 @@ import { FleetAssetRoster } from './features/fleet/FleetAssetRoster';
 import { RegulatoryAuditDashboard } from './features/command-center/RegulatoryAuditDashboard';
 import { CommandCenterLogin } from './features/command-center/CommandCenterLogin';
 import { BillingPortal } from './features/billing/BillingPortal';
+import { OnboardingGate } from './features/onboarding/OnboardingGate';
 
 // Tipos de Propósito de Hardware y Perfil
 type DevicePurpose = 'UNSET' | 'CABIN_KIOSK' | 'COMMAND_CENTER';
@@ -13,7 +14,7 @@ type CommandTab = 'ROSTER' | 'AUDIT_LEDGER' | 'SYSTEM_CONFIG';
 interface UserProfile {
   id: string;
   full_name: string;
-  role: 'super_admin' | 'fleet_manager' | 'fitter' | 'dispatcher' | 'driver' | 'account_owner';
+  role: 'super_admin' | 'fleet_manager' | 'fitter' | 'dispatcher' | 'driver' | 'account_owner' | 'pending_onboarding';
   fleet_id: string;
   email?: string;
 }
@@ -200,6 +201,11 @@ export const App: React.FC = () => {
   if (!profile) {
     // Si no hay sesión en el Command Center, forzamos login satelital a través del componente real
     return <CommandCenterLogin onBackToSelector={executeDevicePurge} />;
+  }
+
+  // 🛑 BARRERA ZERO-TRUST DE ONBOARDING
+  if (profile && profile.role === 'pending_onboarding') {
+    return <OnboardingGate userEmail={profile.email || ''} userId={profile.id} />;
   }
 
   // 🛑 COMPUERTA DE AISLAMIENTO FINANCIERO (ZERO-TRUST)
