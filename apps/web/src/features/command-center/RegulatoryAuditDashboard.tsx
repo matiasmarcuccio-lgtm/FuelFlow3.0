@@ -15,6 +15,50 @@ interface AuditPayload {
 export const RegulatoryAuditDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AuditReportType>('ATO_FUEL_REBATE');
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [exportingLoto, setExportingLoto] = useState(false);
+
+  const handleExportLotoCSV = async () => {
+    setExportingLoto(true);
+    try {
+      const { data, error } = await supabase.rpc('fn_export_regulatory_report', { p_report_type: 'WHS_BREAK_GLASS_AUDIT' });
+      if (error) throw error;
+      
+      const rows = data.data || [];
+      if (rows.length === 0) {
+        alert('No hay registros de Ruptura WHS en esta flota.');
+        return;
+      }
+      
+      const headers = ['Timestamp AEST', 'Gerente UID', 'Email', 'ID Candado', 'Vehiculo ID', 'Tecnico Victima UID', 'Motivo Declarado'];
+      const csvContent = [
+        headers.join(','),
+        ...rows.map((r: any) => [
+          `"${r.timestamp_aest}"`,
+          `"${r.gerente_ejecutor_uid}"`,
+          `"${r.gerente_email}"`,
+          `"${r.lockout_id_afectado}"`,
+          `"${r.vehiculo_id}"`,
+          `"${r.tecnico_atropellado_uid}"`,
+          `"${r.motivo_worksafe}"`
+        ].join(','))
+      ].join('\\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `WorkSafe_Audit_Lockout_Overrides_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Error al exportar reporte forense WHS');
+    } finally {
+      setExportingLoto(false);
+    }
+  };
 
   // 1. EXTRACCIÓN SATELITAL DESDE LAS VISTAS MATERIALIZADAS EN CAPA 0
   const { data: reportPackage, isLoading, error } = useQuery<AuditPayload>({
@@ -86,13 +130,22 @@ export const RegulatoryAuditDashboard: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={executeDownload}
-          disabled={isExporting || rows.length === 0}
-          className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-30 text-black font-black px-6 py-4 rounded-xl uppercase tracking-widest text-xs shadow-xl transition-all flex items-center gap-2"
-        >
-          <span>📥 DESCARGAR PAQUETE LEGAL (ATO / WORKSAFE)</span>
-        </button>
+        <div className="flex flex-col md:flex-row gap-2">
+          <button
+            onClick={handleExportLotoCSV}
+            disabled={exportingLoto}
+            className="bg-purple-600 hover:bg-purple-500 disabled:opacity-30 text-white font-black px-6 py-4 rounded-xl uppercase tracking-widest text-xs shadow-xl transition-all flex items-center gap-2"
+          >
+            <span>{exportingLoto ? 'EXTRAYENDO...' : '🚨 CSV RUPTURAS WHS'}</span>
+          </button>
+          <button
+            onClick={executeDownload}
+            disabled={isExporting || rows.length === 0}
+            className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-30 text-black font-black px-6 py-4 rounded-xl uppercase tracking-widest text-xs shadow-xl transition-all flex items-center gap-2"
+          >
+            <span>📥 DESCARGAR VISTA ACTUAL (JSON)</span>
+          </button>
+        </div>
       </header>
 
       {/* Botonera de Selección de Reporte */}
