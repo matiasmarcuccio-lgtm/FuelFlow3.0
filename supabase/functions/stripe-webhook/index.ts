@@ -47,25 +47,21 @@ serve(async (req: Request) => {
           invoice_settings: { default_payment_method: paymentMethodId },
         });
 
-        // 2. Suscribir al cliente al plan metrado de pago por uso (Flota Operativa) - Opcional para Desarrollo
-        const priceId = Deno.env.get('STRIPE_METERED_PRICE_ID');
-        let subscriptionId = 'sub_dummy_for_testing';
+        // 2. Suscribir al cliente al plan metrado de pago por uso (Flota Operativa)
+        const priceId = Deno.env.get('STRIPE_METERED_PRICE_ID') || 'price_1Ty1XpFbrnVv4ELr5c0ADKJK';
         
-        if (priceId) {
-          const subscription = await stripe.subscriptions.create({
-            customer: customerId,
-            items: [{ price: priceId }],
-            metadata: { supabase_uid: supabaseUid }
-          });
-          subscriptionId = subscription.id;
-        }
+        const subscription = await stripe.subscriptions.create({
+          customer: customerId,
+          items: [{ price: priceId }],
+          metadata: { supabase_uid: supabaseUid }
+        });
 
         // 3. Ejecutar promoción relacional y creación de mina en 1 sola transacción ACID
         const { error: rpcError } = await adminClient.rpc('fn_promote_to_account_owner', {
           p_user_uid: supabaseUid,
           p_fleet_name: fleetName,
           p_stripe_customer_id: customerId,
-          p_stripe_subscription_id: subscriptionId
+          p_stripe_subscription_id: subscription.id
         });
 
         if (rpcError) {
