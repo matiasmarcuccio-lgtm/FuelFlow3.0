@@ -27,7 +27,7 @@ serve(async (req: Request) => {
 
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('role, email')
+      .select('role')
       .eq('id', user.id)
       .single();
 
