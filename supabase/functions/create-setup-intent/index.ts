@@ -22,8 +22,15 @@ serve(async (req: Request) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) throw new Error('AUTENTICACIÓN REQUERIDA: Token inválido.');
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error('AUTENTICACIÓN REQUERIDA: No se proporcionó token en la cabecera.');
+    
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !user) {
+      throw new Error(`AUTENTICACIÓN REQUERIDA: Token inválido. Detalles: ${authError?.message || 'No user'}`);
+    }
 
     const { data: profile } = await supabaseClient
       .from('profiles')
