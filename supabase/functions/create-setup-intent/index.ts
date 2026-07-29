@@ -22,8 +22,11 @@ serve(async (req: Request) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error('AUTENTICACIÓN REQUERIDA: No se proporcionó token en la cabecera.');
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+    if (!authHeader) {
+      const allHeaders = Array.from(req.headers.entries()).map(([k, v]) => `${k}: ${v}`).join(', ');
+      throw new Error(`AUTENTICACIÓN REQUERIDA: No se proporcionó token. Headers recibidos: ${allHeaders}`);
+    }
     
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
