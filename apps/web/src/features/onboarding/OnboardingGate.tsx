@@ -53,7 +53,17 @@ export const OnboardingGate: React.FC<{ userEmail: string; userId: string }> = (
       const { data, error: fnError } = await supabase.functions.invoke('create-setup-intent', {
         body: { fleetName }
       });
-      if (fnError) throw fnError;
+      
+      // Supabase-js a veces oculta el cuerpo del error real dentro de fnError.context
+      if (fnError) {
+        if (fnError.context && typeof fnError.context.json === 'function') {
+           const errBody = await fnError.context.json().catch(() => ({}));
+           throw new Error(errBody.error || fnError.message);
+        }
+        // Alternativamente, a veces viene como fnError.message
+        throw new Error(fnError.message || 'Error al conectar con la pasarela.');
+      }
+      
       setClientSecret(data.client_secret);
       setStep('CARD');
     } catch (err: any) {
