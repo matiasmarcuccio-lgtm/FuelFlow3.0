@@ -42,12 +42,37 @@ export const BillingPortal: React.FC<{ userEmail: string }> = ({ userEmail }) =>
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('create-portal-session', {
-        body: { returnUrl: window.location.href }
-      });
-      if (fnError) throw fnError;
-      if (data?.url) {
-        window.location.href = data.url; // Redirección segura a Stripe PCI-DSS
+      const sessionData = await supabase.auth.getSession();
+      const token = sessionData.data.session?.access_token;
+      
+      if (!token) {
+        throw new Error('Su sesión de administrador ha expirado. Por favor, cierre sesión y vuelva a entrar.');
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-portal-session`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ returnUrl: window.location.href }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(errorBody.error || `Error HTTP ${response.status}: El servidor bancario rechazó la petición.`);
+      }
+
+      const responseData = await response.json();
+      const url = responseData.url;
+
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('La respuesta del servidor no incluyó una URL válida.');
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';

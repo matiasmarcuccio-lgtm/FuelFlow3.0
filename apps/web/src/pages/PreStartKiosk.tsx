@@ -131,9 +131,17 @@ export const PreStartKiosk: React.FC<PreStartKioskProps> = ({
       onPreStartCompleted(!hasCriticalFail);
     } catch (err: any) {
       setIsSubmitting(false);
-      alert(`ERR_LEDGER_SYNC: No se pudo firmar la bitácora WHS. ${err.message}`);
+      if (err.message.includes('42501') || err.message.includes('BILLING_LOCKDOWN')) {
+        setIsAdministrativeLock(true);
+      } else {
+        alert(`ERR_LEDGER_SYNC: No se pudo firmar la bitácora WHS. ${err.message}`);
+      }
     }
   };
+
+  if (isAdministrativeLock) {
+    return <AdministrativeLockdown />;
+  }
 
   // GUILLOTINA DE DEFECTO VITAL: Si falló un ítem crítico, bloqueamos la máquina in situ
   if (fatalDefectTriggered) {
