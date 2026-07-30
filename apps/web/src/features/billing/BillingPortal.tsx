@@ -65,8 +65,50 @@ export const BillingPortal: React.FC<{ userEmail: string }> = ({ userEmail }) =>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
             <span>💳</span> Centro de Facturación Metrada B2B
           </h1>
-          <p className="text-slate-400 text-sm mt-1">Dueño de Cuenta Registrado: <span className="font-mono text-emerald-400">{userEmail}</span></p>
-        </div>
+          <p className="text-slate-400 mt-2 font-mono text-sm max-w-2xl">
+          Dueño de Cuenta Registrado: <span className="text-blue-400">{userEmail}</span>
+        </p>
+
+        {/* BOTÓN TÁCTICO DE INYECCIÓN (BORRAR DESPUÉS) */}
+        <button
+          onClick={async (e) => {
+            e.preventDefault();
+            try {
+              // 1. Verificar tu sesión activa como Dueño
+              const { data: profile, error: profileErr } = await supabase.from('profiles').select('fleet_id').single();
+              if (profileErr || !profile?.fleet_id) throw new Error('Debes iniciar sesión como Dueño primero.');
+              
+              const targetFleet = profile.fleet_id;
+              const testUsers = [
+                { email: 'gerente@tasmaniagravel.com.au', role: 'fleet_manager', name: 'Gerente Pruebas' },
+                { email: 'despacho@tasmaniagravel.com.au', role: 'dispatcher', name: 'Control Despacho' },
+                { email: 'chofer1@tasmaniagravel.com.au', role: 'driver', name: 'Chofer Uno' }
+              ];
+
+              for (const u of testUsers) {
+                const { error } = await supabase.auth.signUp({
+                  email: u.email,
+                  password: 'TestPassword123!',
+                  options: {
+                    data: {
+                      invited_fleet_id: targetFleet,
+                      invited_role: u.role,
+                      full_name: u.name
+                    }
+                  }
+                });
+                if (error) console.error(`Fallo con ${u.role}:`, error.message);
+              }
+              alert('Tropa inyectada con éxito en la Capa 0. Revisa Supabase.');
+            } catch (err: any) {
+              alert('Error: ' + err.message);
+            }
+          }}
+          className="w-full mt-6 p-4 bg-red-900 border border-red-500 text-red-100 font-bold rounded-lg shadow-xl uppercase tracking-wider transition-colors hover:bg-red-800"
+        >
+          ⚠️ Inyectar Personal de Prueba (Borrar Después)
+        </button>
+      </div>
         <button 
           onClick={handleOpenStripePortal}
           disabled={loading}
