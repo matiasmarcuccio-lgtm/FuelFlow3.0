@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { FitterReleaseModal } from '../maintenance/FitterReleaseModal';
 import { TokenGeneratorModal } from './TokenGeneratorModal';
 import { EmergencyOverrideModal } from './EmergencyOverrideModal';
+import { CreateAssetModal } from './CreateAssetModal';
 
 interface AssetRow {
   id: string;
@@ -32,6 +33,38 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
 
   // Estado para el provisionamiento de tablets (Zero-Trust Token)
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
+
+  // Estado para crear nuevos activos (Conducto 2)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Mutación SSOT para crear un activo
+  const createAssetMutation = useMutation({
+    mutationFn: async (payload: { name: string; category: string }) => {
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('fleet_id')
+        .eq('id', (await supabase.auth.getUser()).data.user?.id)
+        .single();
+        
+      if (profileErr || !profile?.fleet_id) {
+        throw new Error('Identidad gerencial no validada. Imposible matricular maquinaria.');
+      }
+
+      const { data, error } = await supabase.from('assets').insert([{
+        fleet_id: profile.fleet_id,
+        internal_code: payload.name,
+        category: payload.category,
+        status: 'OPERATIONAL'
+      }]).select();
+
+      if (error) throw new Error(`Fallo en el registro de motor: ${error.message}`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fleet_assets_roster', fleetId] });
+      setIsCreateModalOpen(false);
+    }
+  });
 
   // 1. CONSULTA DE ACTIVOS EN CAPA 0 (Con join relacional a la etiqueta de peligro activa)
   const { data: assets = [], isLoading, error } = useQuery<AssetRow[]>({
@@ -115,14 +148,24 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
             JURISDICCIÓN: FLOTA ID #{fleetId.slice(0, 8)} | ROL ACTIVO: <strong className="text-blue-400">{userRole.toUpperCase()}</strong>
           </p>
           
-          {/* Botón de Emisión de Tokens de Flota (Solo Gerencia) */}
-          {['fleet_manager', 'super_admin'].includes(userRole) && (
-            <button
-              onClick={() => setIsTokenModalOpen(true)}
-              className="mt-4 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
-            >
-              <span>📲 EMITIR TOKEN DE TABLET</span>
-            </button>
+          {/* Botón de Emisión de Tokens de Flota y Crear Activo (Solo Gerencia) */}
+          {['fleet_manager', 'super_admin', 'account_owner'].includes(userRole) && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              <button
+                onClick={() => setIsTokenModalOpen(true)}
+                className="bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+              >
+                <span>📲 EMITIR TOKEN DE TABLET</span>
+              </button>
+              
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:border-blue-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[14px]">add</span>
+                <span>MATRICULAR ACTIVO</span>
+              </button>
+            </div>
           )}
         </div>
 
@@ -300,6 +343,13 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
         isOpen={isTokenModalOpen}
         onClose={() => setIsTokenModalOpen(false)}
         fleetId={fleetId}
+      />
+      {/* Modal Creador de Activos */}
+      <CreateAssetModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onConfirm={(payload) => createAssetMutation.mutate(payload)}
+        isSubmitting={createAssetMutation.isPending}
       />
     </div>
   );
