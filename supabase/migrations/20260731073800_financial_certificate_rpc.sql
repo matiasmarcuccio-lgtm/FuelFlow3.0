@@ -38,7 +38,7 @@ BEGIN
         SELECT id
         FROM public.asset_assignments 
         WHERE id = ANY(p_assignment_ids) 
-          AND status = 'COMPLETED' 
+          AND status = 'completed' 
           AND certificate_id IS NULL
           AND fleet_id = v_fleet_id
         FOR UPDATE
