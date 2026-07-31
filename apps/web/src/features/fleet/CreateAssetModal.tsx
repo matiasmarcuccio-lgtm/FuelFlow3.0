@@ -4,7 +4,7 @@ import { X, Truck, Save, Loader2 } from 'lucide-react';
 interface CreateAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (payload: { name: string; category: string }) => void;
+  onConfirm: (payload: { name: string; category: string; required_license_id: string }) => void;
   isSubmitting: boolean;
 }
 
@@ -16,13 +16,30 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [category, setCategory] = useState('heavy_machinery');
+  const [licenseCategories, setLicenseCategories] = useState<{ id: string; code: string; description: string }[]>([]);
+  const [selectedLicenseId, setSelectedLicenseId] = useState<string>('');
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const fetchLicenses = async () => {
+      const { supabase } = await import('../../lib/supabase');
+      const { data, error } = await supabase.from('license_categories').select('id, code, description');
+      if (!error && data) {
+        setLicenseCategories(data);
+        if (data.length > 0) {
+          setSelectedLicenseId(data[0].id);
+        }
+      }
+    };
+    fetchLicenses();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    onConfirm({ name: name.trim(), category });
+    if (!name.trim() || !selectedLicenseId) return;
+    onConfirm({ name: name.trim(), category, required_license_id: selectedLicenseId });
   };
 
   return (
@@ -71,6 +88,25 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                 <option value="heavy_machinery">Maquinaria Pesada (Volquete, Excavadora)</option>
                 <option value="light_vehicle">Vehículo Liviano (Camioneta)</option>
                 <option value="static_plant">Planta Estática (Romana, Generador)</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest block">
+                Licencia Mínima Requerida
+              </label>
+              <select 
+                value={selectedLicenseId} 
+                onChange={(e) => setSelectedLicenseId(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono uppercase focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                required
+              >
+                <option value="" disabled>Seleccione una exigencia legal...</option>
+                {licenseCategories.map(lic => (
+                  <option key={lic.id} value={lic.id}>
+                    {lic.code} - {lic.description}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
