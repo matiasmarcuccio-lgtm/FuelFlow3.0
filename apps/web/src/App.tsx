@@ -234,96 +234,96 @@ export const App: React.FC = () => {
   const canAccessBilling = ['super_admin', 'account_owner'].includes(profile.role);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans select-none overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans select-none overflow-hidden h-screen">
       
       {/* Barra de Mando Superior (Command Center HUD) */}
-      <header className="bg-black/80 border-b border-slate-800 px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sticky top-0 z-40 backdrop-blur-md">
+      <header className="bg-card border-b border-border px-6 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 z-40">
         <div className="flex items-center gap-3">
-          <span className="bg-emerald-500 text-black font-mono font-black text-xs px-3 py-1 rounded uppercase tracking-widest">
+          <span className="font-mono font-bold text-lg tracking-tight uppercase text-foreground">
             JITSITE COMMAND CENTER
           </span>
-          <span className="font-mono text-xs text-slate-400 uppercase hidden md:inline">
-            JURISDICCIÓN: #{profile.fleet_id ? profile.fleet_id.slice(0, 8) : 'GLOBAL'} • HOBART AEST
+          <span className="font-mono text-[10px] text-muted-foreground uppercase hidden md:inline border border-border px-2 py-0.5 ml-2">
+            #{profile.fleet_id ? profile.fleet_id.slice(0, 8) : 'GLOBAL'} • HOBART AEST
           </span>
         </div>
 
         {/* Botonera de Navegación de Pestañas */}
-        <nav className="flex items-center gap-2 w-full md:w-auto font-mono text-xs overflow-x-auto pb-2 md:pb-0">
+        <nav className="flex items-center gap-1 w-full md:w-auto font-mono text-xs overflow-x-auto pb-2 md:pb-0">
           {canAccessTelemetry && (
             <button
               onClick={() => setActiveCommandTab('TELEMETRY')}
-              className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${
+              className={`flex-1 md:flex-initial px-4 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap ${
                 activeCommandTab === 'TELEMETRY'
-                  ? 'bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-600/20'
-                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                  ? 'bg-primary/10 text-primary border-primary'
+                  : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
-              📡 Telemetría JITSite
+              Telemetría
             </button>
           )}
 
           {canAccessRoster && (
             <button
               onClick={() => setActiveCommandTab('ROSTER')}
-              className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${
+              className={`flex-1 md:flex-initial px-4 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap ${
                 activeCommandTab === 'ROSTER'
-                  ? 'bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-600/20'
-                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                  ? 'bg-primary/10 text-primary border-primary'
+                  : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
-              🚜 Roster de Flota
+              Roster
             </button>
           )}
 
           {canAccessAudit && (
             <button
               onClick={() => setActiveCommandTab('AUDIT_LEDGER')}
-              className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all border ${
+              className={`flex-1 md:flex-initial px-4 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap ${
                 activeCommandTab === 'AUDIT_LEDGER'
-                  ? 'bg-emerald-600 text-black border-emerald-400 shadow-lg shadow-emerald-600/20'
-                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                  ? 'bg-primary/10 text-primary border-primary'
+                  : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
-              ⚖️ Auditoría ATO/WHS
+              Auditoría
             </button>
           )}
 
           {canAccessAudit && (
             <button
               onClick={() => setActiveCommandTab('HUMAN_RESOURCES')}
-              className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all border ${
+              className={`flex-1 md:flex-initial px-4 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap ${
                 activeCommandTab === 'HUMAN_RESOURCES'
-                  ? 'bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-600/20'
-                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                  ? 'bg-primary/10 text-primary border-primary'
+                  : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
-              👥 Recursos Humanos
+              Tripulación
             </button>
           )}
 
           {canAccessBilling && (
             <button
               onClick={() => setActiveCommandTab('BILLING')}
-              className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all border ${
+              className={`flex-1 md:flex-initial px-4 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap ${
                 activeCommandTab === 'BILLING'
-                  ? 'bg-purple-600 text-white border-purple-400 shadow-lg shadow-purple-600/20'
-                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                  ? 'bg-primary/10 text-primary border-primary'
+                  : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
-              💳 Facturación
+              Facturación
             </button>
           )}
         </nav>
 
         {/* Perfil y Cierre de Sesión */}
-        <div className="flex items-center gap-4 text-right w-full md:w-auto justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-900 font-mono">
+        <div className="flex items-center gap-4 text-right w-full md:w-auto justify-end pt-3 md:pt-0 font-mono">
           <div>
-            <p className="text-xs font-bold text-white uppercase">{profile.full_name}</p>
-            <p className="text-[10px] text-blue-400 uppercase font-black">{profile.role}</p>
+            <p className="text-xs font-bold text-foreground uppercase">{profile.full_name}</p>
+            <p className="text-[10px] text-primary uppercase font-black">{profile.role}</p>
           </div>
           <button
             onClick={() => supabase.auth.signOut()}
-            className="bg-slate-900 hover:bg-red-950/50 text-slate-400 hover:text-red-400 border border-slate-800 px-3 py-2 rounded-lg text-[10px] font-bold uppercase transition-colors"
+            className="bg-secondary hover:bg-destructive/10 text-muted-foreground hover:text-destructive border border-border hover:border-destructive px-3 py-2 text-[10px] font-bold uppercase transition-colors"
           >
             SALIR
           </button>
@@ -331,40 +331,44 @@ export const App: React.FC = () => {
       </header>
 
       {/* Cuerpo Analítico Principal */}
-      <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
+      <main className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-background">
         {activeCommandTab === 'TELEMETRY' && canAccessTelemetry && (
           <FleetDashboard />
         )}
 
-        {activeCommandTab === 'ROSTER' && canAccessRoster && (
-          <FleetAssetRoster userRole={profile.role} fleetId={profile.fleet_id} />
-        )}
+        {activeCommandTab !== 'TELEMETRY' && (
+          <div className="p-6 md:p-8 max-w-7xl w-full mx-auto flex-1 flex flex-col min-h-0">
+            {activeCommandTab === 'ROSTER' && canAccessRoster && (
+              <FleetAssetRoster userRole={profile.role} fleetId={profile.fleet_id} />
+            )}
 
-        {activeCommandTab === 'AUDIT_LEDGER' && canAccessAudit && (
-          <RegulatoryAuditDashboard />
-        )}
+            {activeCommandTab === 'AUDIT_LEDGER' && canAccessAudit && (
+              <RegulatoryAuditDashboard />
+            )}
 
-        {activeCommandTab === 'HUMAN_RESOURCES' && canAccessAudit && (
-          <HumanResourcesContainer fleetId={profile.fleet_id} />
-        )}
+            {activeCommandTab === 'HUMAN_RESOURCES' && canAccessAudit && (
+              <HumanResourcesContainer fleetId={profile.fleet_id} />
+            )}
 
-        {activeCommandTab === 'BILLING' && canAccessBilling && (
-          <BillingPortal userEmail={profile.email || ''} />
-        )}
+            {activeCommandTab === 'BILLING' && canAccessBilling && (
+              <BillingPortal userEmail={profile.email || ''} />
+            )}
 
-        {!canAccessTelemetry && !canAccessRoster && !canAccessAudit && !canAccessBilling && (
-          <div className="bg-red-950/30 border-2 border-red-800 p-12 rounded-3xl text-center font-mono text-red-400 uppercase">
-            ⚠️ SU ROL ACTUAL ({profile.role}) CARECE DE ADUANAS DE LECTURA ASIGNADAS EN ESTE PANORAMA.
+            {!canAccessTelemetry && !canAccessRoster && !canAccessAudit && !canAccessBilling && (
+              <div className="bg-red-950/30 border-2 border-red-800 p-12 rounded-3xl text-center font-mono text-red-400 uppercase">
+                ⚠️ SU ROL ACTUAL ({profile.role}) CARECE DE ADUANAS DE LECTURA ASIGNADAS EN ESTE PANORAMA.
+              </div>
+            )}
           </div>
         )}
       </main>
 
       {/* Pie de Página del Sistema */}
-      <footer className="bg-black/90 border-t border-slate-900 px-6 py-4 text-center font-mono text-[10px] text-slate-600 uppercase flex justify-between items-center">
+      <footer className="bg-card border-t border-border px-6 py-2 text-center font-mono text-[10px] text-muted-foreground uppercase flex justify-between items-center z-40">
         <span>JITSite Zero-Trust Architecture • Capa 0 Blindada por RLS</span>
         <button
           onClick={executeDevicePurge}
-          className="text-slate-700 hover:text-red-500 underline transition-colors"
+          className="hover:text-foreground transition-colors"
         >
           [Reconfigurar Hardware]
         </button>
