@@ -9,6 +9,7 @@ export const InviteRegistration: React.FC<InviteRegistrationProps> = ({ inviteTo
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [pin, setPin] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -19,19 +20,34 @@ export const InviteRegistration: React.FC<InviteRegistrationProps> = ({ inviteTo
     setError(null);
 
     try {
+      // 1. Crear identidad en GoTrue (Trigger handle_new_user lo deja en pending_onboarding)
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: fullName,
-            invite_token: inviteToken // Este token será consumido por el disparador 'handle_new_user'
+            full_name: fullName
           }
         }
       });
 
       if (signUpError) throw signUpError;
       
+      // Esperar 1 segundo para asegurar que GoTrue haya replicado la sesión
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 2. Consumir la invitación (Asigna fleet_id y el rol verdadero)
+      const { error: consumeError } = await supabase.rpc('fn_consume_fleet_invite', {
+        p_token: inviteToken
+      });
+      if (consumeError) throw new Error(`Fallo al vincular flota: ${consumeError.message}`);
+
+      // 3. Sellar el PIN Militar
+      const { error: pinError } = await supabase.rpc('fn_set_operator_pin', {
+        p_pin: pin
+      });
+      if (pinError) throw new Error(`Fallo al establecer PIN: ${pinError.message}`);
+
       setSuccess(true);
     } catch (err: unknown) {
       console.error('Error in registration:', err);
@@ -114,17 +130,33 @@ export const InviteRegistration: React.FC<InviteRegistrationProps> = ({ inviteTo
             />
           </div>
 
-          <div>
-            <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">Clave Criptográfica</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors outline-none placeholder-slate-700 font-medium font-mono"
-              placeholder="••••••••"
-              required
-              minLength={6}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">Credencial WHS (Contraseña)</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors outline-none placeholder-slate-700 font-medium"
+                placeholder="Mínimo 6 caracteres"
+                required
+                minLength={6}
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-mono text-slate-500 uppercase mb-1">PIN Operativo Kiosco (4 Dígitos)</label>
+              <input
+                type="password"
+                value={pin}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors outline-none placeholder-slate-700 font-mono tracking-widest text-center"
+                placeholder="****"
+                required
+                maxLength={4}
+                minLength={4}
+                pattern="\d{4}"
+              />
+            </div>
           </div>
 
           <button

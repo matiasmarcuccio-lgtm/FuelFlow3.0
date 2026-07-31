@@ -21,13 +21,17 @@ interface CrewManagementProps {
   invites: Invite[];
   isGenerating: boolean;
   onGenerateInvite: (role: string) => void;
+  onDisableMember: (id: string) => void;
+  onRevokeInvite: (token: string) => void;
 }
 
 export const CrewManagementPresenter: React.FC<CrewManagementProps> = ({
   crew,
   invites,
   isGenerating,
-  onGenerateInvite
+  onGenerateInvite,
+  onDisableMember,
+  onRevokeInvite
 }) => {
   const [selectedRole, setSelectedRole] = useState<string>('driver');
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
@@ -62,7 +66,8 @@ export const CrewManagementPresenter: React.FC<CrewManagementProps> = ({
                 <tr>
                   <th className="px-4 py-3 rounded-tl-lg">Name</th>
                   <th className="px-4 py-3">Role</th>
-                  <th className="px-4 py-3 rounded-tr-lg">Status</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 rounded-tr-lg text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -81,10 +86,24 @@ export const CrewManagementPresenter: React.FC<CrewManagementProps> = ({
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${
-                          member.status === 'ACTIVE' ? 'bg-emerald-900/50 text-emerald-400' : 'bg-red-900/50 text-red-400'
+                          member.status === 'ACTIVE' ? 'bg-emerald-900/50 text-emerald-400' : 'bg-slate-900/50 text-slate-500'
                         }`}>
                           {member.status}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {member.status === 'ACTIVE' && member.role !== 'account_owner' && (
+                          <button 
+                            onClick={() => {
+                              if (window.confirm(`¿Está seguro de inhabilitar a ${member.full_name}?`)) {
+                                onDisableMember(member.id);
+                              }
+                            }}
+                            className="text-red-400 hover:text-red-300 font-mono text-xs uppercase transition-colors"
+                          >
+                            Dar de baja
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -137,9 +156,14 @@ export const CrewManagementPresenter: React.FC<CrewManagementProps> = ({
                   invites.map((invite) => {
                     const isConsumed = !!invite.consumed_at;
                     const isExpired = new Date(invite.expires_at) < new Date();
-                    
                     return (
                       <tr key={invite.id} className="border-b border-slate-800/50 hover:bg-slate-800/50 transition-colors">
+                        <td className="px-4 py-3 font-mono text-white text-xs">
+                          {invite.token}
+                          {isExpired && !isConsumed && (
+                            <span className="ml-2 text-[10px] text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded">EXPIRED</span>
+                          )}
+                        </td>
                         <td className="px-4 py-3">
                           <span className="bg-slate-800 px-2 py-1 rounded text-xs uppercase tracking-wider text-slate-300">
                             {invite.role}
@@ -147,20 +171,32 @@ export const CrewManagementPresenter: React.FC<CrewManagementProps> = ({
                         </td>
                         <td className="px-4 py-3">
                           {isConsumed ? (
-                            <span className="text-emerald-500 font-bold text-xs uppercase">Consumed</span>
+                            <span className="text-slate-500 font-bold text-xs uppercase">Consumed</span>
                           ) : isExpired ? (
-                            <span className="text-red-500 font-bold text-xs uppercase">Expired</span>
+                            <span className="text-rose-500 font-bold text-xs uppercase">Expired</span>
                           ) : (
                             <span className="text-amber-500 font-bold text-xs uppercase animate-pulse">Pending</span>
                           )}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 text-right">
                           {!isConsumed && !isExpired && (
                             <button
                               onClick={() => handleCopyUrl(invite.token)}
-                              className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded transition-colors uppercase font-bold"
+                              className="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded transition-colors uppercase font-bold mr-2"
                             >
                               {copiedToken === invite.token ? 'COPIED!' : 'COPY URL'}
+                            </button>
+                          )}
+                          {!isConsumed && (
+                            <button 
+                              onClick={() => {
+                                if (window.confirm('¿Está seguro de revocar esta invitación?')) {
+                                  onRevokeInvite(invite.token);
+                                }
+                              }}
+                              className="text-red-400 hover:text-red-300 font-mono text-xs uppercase transition-colors"
+                            >
+                              Revocar
                             </button>
                           )}
                         </td>

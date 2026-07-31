@@ -44,18 +44,40 @@ export const HumanResourcesContainer: React.FC<HumanResourcesContainerProps> = (
   const generateInviteMutation = useMutation({
     mutationFn: async (role: string) => {
       const { data, error } = await supabase.rpc('fn_generate_fleet_invite', {
-        p_fleet_id: fleetId
+        p_fleet_id: fleetId,
+        p_role: role
       });
       if (error) throw error;
       
-      // Actualizamos el rol del token generado
-      const { error: updateError } = await supabase
-        .from('fleet_invites')
-        .update({ role })
-        .eq('token', data);
-        
-      if (updateError) throw updateError;
+      // El RPC ya inserta en fleet_invites. 
+      // Retorna el token generado.
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invites', fleetId] });
+    }
+  });
+
+  // 4. Mutación para dar de baja a un usuario (Soft Delete)
+  const disableCrewMemberMutation = useMutation({
+    mutationFn: async (profileId: string) => {
+      const { error } = await supabase.rpc('fn_disable_crew_member', {
+        p_profile_id: profileId
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crew', fleetId] });
+    }
+  });
+
+  // 5. Mutación para revocar un token pendiente
+  const revokeInviteMutation = useMutation({
+    mutationFn: async (token: string) => {
+      const { error } = await supabase.rpc('fn_revoke_fleet_invite', {
+        p_token: token
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invites', fleetId] });
@@ -72,6 +94,8 @@ export const HumanResourcesContainer: React.FC<HumanResourcesContainerProps> = (
       invites={invites}
       isGenerating={generateInviteMutation.isPending}
       onGenerateInvite={(role) => generateInviteMutation.mutate(role)}
+      onDisableMember={(id) => disableCrewMemberMutation.mutate(id)}
+      onRevokeInvite={(token) => revokeInviteMutation.mutate(token)}
     />
   );
 };
