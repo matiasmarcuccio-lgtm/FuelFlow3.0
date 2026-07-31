@@ -1,5 +1,5 @@
 -- 1. Arreglar la generación de invitaciones para que el Dueño (account_owner) tenga permiso
-CREATE OR REPLACE FUNCTION public.fn_generate_fleet_invite(p_fleet_id UUID)
+CREATE OR REPLACE FUNCTION public.fn_generate_fleet_invite(p_fleet_id UUID, p_role VARCHAR DEFAULT 'driver')
 RETURNS VARCHAR(10)
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -19,7 +19,7 @@ BEGIN
     v_token := UPPER(SUBSTRING(MD5(RANDOM()::TEXT) FROM 1 FOR 6));
 
     INSERT INTO public.fleet_invites (fleet_id, token, created_by, role)
-    VALUES (p_fleet_id, v_token, auth.uid(), 'driver');
+    VALUES (p_fleet_id, v_token, auth.uid(), p_role);
 
     RETURN v_token;
 END;
