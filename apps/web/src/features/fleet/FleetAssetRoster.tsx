@@ -54,7 +54,8 @@ export const FleetAssetRoster: React.FC<FleetAssetRosterProps> = ({ userRole, fl
         fleet_id: profile.fleet_id,
         internal_code: payload.name,
         category: payload.category,
-        status: 'OPERATIONAL'
+        status: 'operational',
+        required_license_id: 'f5555555-0000-0000-0000-000000000001' // HR License genérica requerida por esquema V3
       }]).select();
 
       if (error) throw new Error(`Fallo en el registro de motor: ${error.message}`);

@@ -15,7 +15,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
   isSubmitting
 }) => {
   const [name, setName] = useState('');
-  const [category, setCategory] = useState('dump_truck');
+  const [category, setCategory] = useState('heavy_machinery');
 
   if (!isOpen) return null;
 
@@ -59,7 +59,7 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
               />
             </div>
 
-            <div className="space-y-2">
+          <div className="space-y-2">
               <label className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest block">
                 Categoría (Tipo)
               </label>
@@ -68,12 +68,9 @@ export const CreateAssetModal: React.FC<CreateAssetModalProps> = ({
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono uppercase focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
               >
-                <option value="dump_truck">Dump Truck (Volquete)</option>
-                <option value="excavator">Excavator (Excavadora)</option>
-                <option value="loader">Loader (Cargador Frontal)</option>
-                <option value="dozer">Dozer (Bulldozer)</option>
-                <option value="water_cart">Water Cart (Aljibe)</option>
-                <option value="weighbridge">Weighbridge (Romana)</option>
+                <option value="heavy_machinery">Maquinaria Pesada (Volquete, Excavadora)</option>
+                <option value="light_vehicle">Vehículo Liviano (Camioneta)</option>
+                <option value="static_plant">Planta Estática (Romana, Generador)</option>
               </select>
             </div>
           </div>
