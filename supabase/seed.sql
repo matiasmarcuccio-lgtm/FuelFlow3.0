@@ -113,9 +113,78 @@ BEGIN
     ON CONFLICT (id) DO NOTHING;
 
     -- Insertar una Orden Maestra Activa
-    INSERT INTO public.master_orders (id, material_type, target_tonnage, status, origin_geofence, destination_geofence, created_by)
-    VALUES ('e0000000-0000-0000-0000-000000000001', 'GRAVEL', 5000, 'OPEN', '{}'::jsonb, '{}'::jsonb, v_admin_id)
+    INSERT INTO public.master_orders (id, fleet_id, client_id, description, material_type, target_tonnage, status, origin_geofence, destination_geofence, created_by)
+    VALUES ('e0000000-0000-0000-0000-000000000001', v_fleet_id, 'c0000000-0000-0000-0000-000000000001', 'Contrato Principal Hobart', 'GRAVEL', 5000, 'OPEN', '{}'::jsonb, '{}'::jsonb, v_admin_id)
     ON CONFLICT (id) DO NOTHING;
 
     RAISE NOTICE '✅ Sembrado B2B completado con éxito. Flota operativa y lista para despacho.';
 END $$;
+
+BEGIN;
+
+DO $$
+DECLARE
+    v_fleet_id UUID;
+    v_driver_id UUID := 'd0000000-0000-0000-0000-000000000001';
+    v_license_id UUID := 'f0000000-0000-0000-0000-000000000001';
+    v_asset_id UUID := 'a0000000-0000-0000-0000-000000000001';
+    v_primary_order UUID := 'e0000000-0000-0000-0000-000000000001'; -- Hobart City Council (Sembrado previo)
+    v_secondary_client UUID := 'c0000000-0000-0000-0000-000000000002';
+    v_secondary_order UUID := 'e0000000-0000-0000-0000-000000000002';
+BEGIN
+    -- 1. Capturar la jurisdicción
+    SELECT id INTO v_fleet_id FROM public.fleets LIMIT 1;
+
+    -- 1.5 Forjar Auth User para FK
+    INSERT INTO auth.users (id, aud, role, email, email_confirmed_at)
+    VALUES (v_driver_id, 'authenticated', 'authenticated', 'max.rockatansky@tasmaniagravel.com.au', NOW())
+    ON CONFLICT (id) DO NOTHING;
+
+    -- 2. Forjar el Chofer
+    INSERT INTO public.profiles (id, fleet_id, role)
+    VALUES (v_driver_id, v_fleet_id, 'driver')
+    ON CONFLICT (id) DO NOTHING;
+
+    -- 3. Buscar la Licencia HR (Heavy Rigid) existente en el sembrado B2B
+    SELECT id INTO v_license_id FROM public.license_categories WHERE code = 'HR' LIMIT 1;
+
+    -- 4. Vincular la Licencia al Chofer (Evade el Error WHS_INVALID_LICENSE)
+    INSERT INTO public.driver_licenses (driver_id, license_category_id, issued_date, expiry_date)
+    VALUES (v_driver_id, v_license_id, NOW(), NOW() + INTERVAL '1 year');
+
+    -- 5. Forjar el Camión asociado a esa licencia
+    INSERT INTO public.assets (id, fleet_id, internal_code, category, status, required_license_id, current_odometer, current_engine_hours)
+    VALUES (v_asset_id, v_fleet_id, 'VOLQ-01', 'heavy_machinery', 'operational', v_license_id, 15000, 3500)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- 6. Forjar Cliente y Contrato Secundario (Para probar agrupación en React)
+    INSERT INTO public.clients (id, fleet_id, legal_name, abn_number, billing_email)
+    VALUES (v_secondary_client, v_fleet_id, 'TasWater', 'ABN-888999', 'billing@taswater.com')
+    ON CONFLICT (id) DO NOTHING;
+
+    INSERT INTO public.master_orders (id, fleet_id, client_id, description, status, material_type, target_tonnage, origin_geofence, destination_geofence)
+    VALUES (v_secondary_order, v_fleet_id, v_secondary_client, 'Reparación Tubería Norte', 'ACTIVE', 'WATER', 1000, '{}'::jsonb, '{}'::jsonb)
+    ON CONFLICT (id) DO NOTHING;
+
+    -- 7. Inyectar Entropía de Turnos
+    
+    -- Lote A: 3 Turnos COMPLETADOS para el cliente principal (Listos para facturar juntos)
+    INSERT INTO public.asset_assignments (id, fleet_id, master_order_id, driver_id, asset_id, status, shift_start, shift_end, assigned_by)
+    VALUES 
+    (gen_random_uuid(), v_fleet_id, v_primary_order, v_driver_id, v_asset_id, 'completed', NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days' + INTERVAL '8 hours', 'a1111111-0000-4000-8000-000000000000'),
+    (gen_random_uuid(), v_fleet_id, v_primary_order, v_driver_id, v_asset_id, 'completed', NOW() - INTERVAL '4 days', NOW() - INTERVAL '4 days' + INTERVAL '9 hours', 'a1111111-0000-4000-8000-000000000000'),
+    (gen_random_uuid(), v_fleet_id, v_primary_order, v_driver_id, v_asset_id, 'completed', NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days' + INTERVAL '7.5 hours', 'a1111111-0000-4000-8000-000000000000');
+
+    -- Lote B: 1 Turno COMPLETADO para el cliente secundario (El frontend NO debe permitir agruparlo con el Lote A)
+    INSERT INTO public.asset_assignments (id, fleet_id, master_order_id, driver_id, asset_id, status, shift_start, shift_end, assigned_by)
+    VALUES (gen_random_uuid(), v_fleet_id, v_secondary_order, v_driver_id, v_asset_id, 'completed', NOW() - INTERVAL '2 days', NOW() - INTERVAL '2 days' + INTERVAL '8 hours', 'a1111111-0000-4000-8000-000000000000');
+
+    -- Lote C: 1 Turno EN PROGRESO (El frontend debe ignorarlo por completo en esta vista)
+    INSERT INTO public.asset_assignments (id, fleet_id, master_order_id, driver_id, asset_id, status, shift_start, assigned_by)
+    VALUES 
+    (gen_random_uuid(), v_fleet_id, v_primary_order, v_driver_id, v_asset_id, 'in_progress', NOW(), 'a1111111-0000-4000-8000-000000000000');
+
+END;
+$$;
+
+COMMIT;

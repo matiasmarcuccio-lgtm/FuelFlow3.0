@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { ExecutionCertificateManager } from './ExecutionCertificateManager';
 
 export const FinancialReconciliationContainer: React.FC = () => {
-  const [shifts, setShifts] = useState<any[]>([]);
+  const [shifts, setShifts] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedShiftIds, setSelectedShiftIds] = useState<string[]>([]);
@@ -19,6 +19,10 @@ export const FinancialReconciliationContainer: React.FC = () => {
           shift_start,
           shift_end,
           status,
+          master_order_id,
+          master_orders (
+            description
+          ),
           assets (
             internal_code,
             type,
@@ -34,14 +38,15 @@ export const FinancialReconciliationContainer: React.FC = () => {
 
       if (error) throw error;
       setShifts(data || []);
-    } catch (err: any) {
-      setError(`Error fetching shifts: ${err.message}`);
+    } catch (err: unknown) {
+      setError(`Error fetching shifts: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCompletedShifts();
   }, [fetchCompletedShifts]);
 
@@ -73,8 +78,8 @@ export const FinancialReconciliationContainer: React.FC = () => {
       await fetchCompletedShifts();
       
       alert(`Certificado generado exitosamente: ${certificateId}`);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setGenerating(false);
     }
