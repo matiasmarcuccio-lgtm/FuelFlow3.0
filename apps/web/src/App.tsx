@@ -6,15 +6,15 @@ import { RegulatoryAuditDashboard } from './features/command-center/RegulatoryAu
 import { CommandCenterLogin } from './features/command-center/CommandCenterLogin';
 import { BillingPortal } from './features/billing/BillingPortal';
 import { OnboardingGate } from './features/onboarding/OnboardingGate';
-import { HumanResourcesContainer } from './features/command-center/HumanResourcesContainer';
 import { InviteRegistration } from './features/onboarding/InviteRegistration';
 import { FleetDashboard } from './pages/FleetDashboard';
 import { JITSiteDashboard } from './pages/JITSiteDashboard';
-import { Map, Truck, HardHat, FileText, Users, Activity } from 'lucide-react';
+import { CommandCenterContainer } from './features/command-center/CommandCenterContainer';
+import { Map, Truck, HardHat, FileText, Users, Activity, Target } from 'lucide-react';
 
 // Tipos de Propósito de Hardware y Perfil
 type DevicePurpose = 'UNSET' | 'CABIN_KIOSK' | 'COMMAND_CENTER';
-type CommandTab = 'TELEMETRY_MAP' | 'RESOURCE_MATRIX' | 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'BILLING' | 'SYSTEM_CONFIG';
+type CommandTab = 'TELEMETRY_MAP' | 'RESOURCE_MATRIX' | 'TACTICAL_DISPATCH' | 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'BILLING' | 'SYSTEM_CONFIG';
 
 interface UserProfile {
   id: string;
@@ -255,26 +255,38 @@ export const App: React.FC = () => {
             <>
               <button
                 onClick={() => setActiveCommandTab('TELEMETRY_MAP')}
-                className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
+                className={`group flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border flex items-center justify-center gap-2 ${
                   activeCommandTab === 'TELEMETRY_MAP'
                     ? 'bg-primary/10 text-primary border-primary'
                     : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
                 }`}
               >
-                <Map className="w-4 h-4" />
-                Telemetría
+                <Map className="w-4 h-4 shrink-0" />
+                <span className="md:max-w-0 md:opacity-0 md:group-hover:max-w-xs md:group-hover:opacity-100 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden">Telemetría</span>
               </button>
 
               <button
                 onClick={() => setActiveCommandTab('RESOURCE_MATRIX')}
-                className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
+                className={`group flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border flex items-center justify-center gap-2 ${
                   activeCommandTab === 'RESOURCE_MATRIX'
                     ? 'bg-primary/10 text-primary border-primary'
                     : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
                 }`}
               >
-                <Truck className="w-4 h-4" />
-                Matriz de Recursos
+                <Truck className="w-4 h-4 shrink-0" />
+                <span className="md:max-w-0 md:opacity-0 md:group-hover:max-w-xs md:group-hover:opacity-100 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden">Recursos</span>
+              </button>
+
+              <button
+                onClick={() => setActiveCommandTab('TACTICAL_DISPATCH')}
+                className={`group flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border flex items-center justify-center gap-2 ${
+                  activeCommandTab === 'TACTICAL_DISPATCH'
+                    ? 'bg-primary/10 text-primary border-primary'
+                    : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
+                }`}
+              >
+                <Target className="w-4 h-4 shrink-0" />
+                <span className="md:max-w-0 md:opacity-0 md:group-hover:max-w-xs md:group-hover:opacity-100 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden">Despacho</span>
               </button>
             </>
           )}
@@ -282,56 +294,56 @@ export const App: React.FC = () => {
           {canAccessRoster && (
             <button
               onClick={() => setActiveCommandTab('ROSTER')}
-              className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
+              className={`group flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border flex items-center justify-center gap-2 ${
                 activeCommandTab === 'ROSTER'
                   ? 'bg-primary/10 text-primary border-primary'
                   : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
-              <HardHat className="w-4 h-4" />
-              Roster
+              <HardHat className="w-4 h-4 shrink-0" />
+              <span className="md:max-w-0 md:opacity-0 md:group-hover:max-w-xs md:group-hover:opacity-100 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden">Roster</span>
             </button>
           )}
 
           {canAccessAudit && (
             <button
               onClick={() => setActiveCommandTab('AUDIT_LEDGER')}
-              className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
+              className={`group flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border flex items-center justify-center gap-2 ${
                 activeCommandTab === 'AUDIT_LEDGER'
                   ? 'bg-primary/10 text-primary border-primary'
                   : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
-              <FileText className="w-4 h-4" />
-              Auditoría
+              <FileText className="w-4 h-4 shrink-0" />
+              <span className="md:max-w-0 md:opacity-0 md:group-hover:max-w-xs md:group-hover:opacity-100 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden">Auditoría</span>
             </button>
           )}
 
           {canAccessAudit && (
             <button
               onClick={() => setActiveCommandTab('HUMAN_RESOURCES')}
-              className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
+              className={`group flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border flex items-center justify-center gap-2 ${
                 activeCommandTab === 'HUMAN_RESOURCES'
                   ? 'bg-primary/10 text-primary border-primary'
                   : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
-              <Users className="w-4 h-4" />
-              Tripulación
+              <Users className="w-4 h-4 shrink-0" />
+              <span className="md:max-w-0 md:opacity-0 md:group-hover:max-w-xs md:group-hover:opacity-100 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden">Tripulación</span>
             </button>
           )}
 
           {canAccessBilling && (
             <button
               onClick={() => setActiveCommandTab('BILLING')}
-              className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
+              className={`group flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border flex items-center justify-center gap-2 ${
                 activeCommandTab === 'BILLING'
                   ? 'bg-primary/10 text-primary border-primary'
                   : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
-              <Activity className="w-4 h-4" />
-              Facturación
+              <Activity className="w-4 h-4 shrink-0" />
+              <span className="md:max-w-0 md:opacity-0 md:group-hover:max-w-xs md:group-hover:opacity-100 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden">Facturación</span>
             </button>
           )}
         </nav>
@@ -361,7 +373,11 @@ export const App: React.FC = () => {
           <FleetDashboard />
         )}
 
-        {activeCommandTab !== 'TELEMETRY_MAP' && activeCommandTab !== 'RESOURCE_MATRIX' && (
+        {activeCommandTab === 'TACTICAL_DISPATCH' && canAccessTelemetry && (
+          <CommandCenterContainer fleetId={profile.fleet_id} />
+        )}
+
+        {activeCommandTab !== 'TELEMETRY_MAP' && activeCommandTab !== 'RESOURCE_MATRIX' && activeCommandTab !== 'TACTICAL_DISPATCH' && (
           <div className="p-6 md:p-8 max-w-7xl w-full mx-auto flex-1 flex flex-col min-h-0">
             {activeCommandTab === 'ROSTER' && canAccessRoster && (
               <FleetAssetRoster userRole={profile.role} fleetId={profile.fleet_id} />
