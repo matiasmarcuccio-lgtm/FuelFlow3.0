@@ -1,13 +1,27 @@
+import { useState } from 'react';
 import { Clock } from 'lucide-react';
 
 interface JITQueueSidebarPresenterProps {
     queue: any[];
     isLoading: boolean;
-    onDispatch: (id: string, assetLabel: string) => void;
+    drivers: any[];
+    masterOrders: any[];
+    onDispatch: (queueId: string, assetId: string, driverId: string, orderId: string, assetLabel: string) => void;
     onNewDispatch?: () => void;
 }
 
-export const JITQueueSidebarPresenter: React.FC<JITQueueSidebarPresenterProps> = ({ queue, isLoading, onDispatch, onNewDispatch }) => {
+export const JITQueueSidebarPresenter: React.FC<JITQueueSidebarPresenterProps> = ({ queue, isLoading, drivers, masterOrders, onDispatch, onNewDispatch }) => {
+    const [selections, setSelections] = useState<Record<string, { driverId: string; orderId: string }>>({});
+
+    const updateSelection = (queueId: string, field: 'driverId' | 'orderId', value: string) => {
+        setSelections(prev => ({
+            ...prev,
+            [queueId]: {
+                ...prev[queueId],
+                [field]: value
+            }
+        }));
+    };
     return (
         <aside className="h-full w-full flex flex-col pointer-events-auto bg-card">
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -76,12 +90,43 @@ export const JITQueueSidebarPresenter: React.FC<JITQueueSidebarPresenterProps> =
                                 </div>
 
                                 {isFirst && (
-                                    <button 
-                                        onClick={() => onDispatch(item.id, assetLabel)}
-                                        className="w-full py-2.5 mt-4 bg-primary text-primary-foreground font-mono font-bold uppercase tracking-widest text-[10px] rounded-none flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_15px_rgba(34,197,94,0.2)] relative z-10"
-                                    >
-                                        <span className="material-symbols-outlined text-[14px]">play_arrow</span> DISPATCH NOW
-                                    </button>
+                                    <div className="mt-4 space-y-3 relative z-10 p-3 bg-background border border-border">
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-widest">Driver</label>
+                                            <select 
+                                                className="w-full bg-card border border-border text-foreground text-xs p-2 font-sans focus:outline-none focus:border-primary/50 transition-colors"
+                                                value={selections[item.id]?.driverId || ''}
+                                                onChange={(e) => updateSelection(item.id, 'driverId', e.target.value)}
+                                            >
+                                                <option value="" disabled>Select Driver</option>
+                                                {drivers.map(d => (
+                                                    <option key={d.id} value={d.id}>{d.full_name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        
+                                        <div className="space-y-1.5">
+                                            <label className="text-[10px] font-mono text-muted-foreground uppercase font-bold tracking-widest">Master Order</label>
+                                            <select 
+                                                className="w-full bg-card border border-border text-foreground text-xs p-2 font-sans focus:outline-none focus:border-primary/50 transition-colors"
+                                                value={selections[item.id]?.orderId || ''}
+                                                onChange={(e) => updateSelection(item.id, 'orderId', e.target.value)}
+                                            >
+                                                <option value="" disabled>Select Contract</option>
+                                                {masterOrders.map(o => (
+                                                    <option key={o.id} value={o.id}>{o.material_type || 'Order ' + o.id.substring(0,8)}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <button 
+                                            onClick={() => onDispatch(item.id, item.assets.id, selections[item.id]?.driverId, selections[item.id]?.orderId, assetLabel)}
+                                            disabled={!selections[item.id]?.driverId || !selections[item.id]?.orderId}
+                                            className="w-full py-2.5 mt-2 bg-primary text-primary-foreground font-mono font-bold uppercase tracking-widest text-[10px] rounded-none flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_15px_rgba(34,197,94,0.2)] disabled:opacity-50 disabled:pointer-events-none"
+                                        >
+                                            <span className="material-symbols-outlined text-[14px]">play_arrow</span> DISPATCH NOW
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         );

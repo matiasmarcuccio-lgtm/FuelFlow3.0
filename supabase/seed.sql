@@ -108,13 +108,13 @@ BEGIN
     -- FASE F: JURISDICCIÓN COMERCIAL (Clientes y Órdenes Maestras)
     -- ========================================================================
     -- Insertar un Cliente de Prueba
-    INSERT INTO public.clients (id, fleet_id, name, status)
-    VALUES ('c0000000-0000-0000-0000-000000000001', v_fleet_id, 'Hobart City Council', 'ACTIVE')
+    INSERT INTO public.clients (id, fleet_id, legal_name, abn_number, billing_email, payment_terms)
+    VALUES ('c0000000-0000-0000-0000-000000000001', v_fleet_id, 'Hobart City Council', '123456789', 'billing@hobart.gov.au', 'NET30')
     ON CONFLICT (id) DO NOTHING;
 
     -- Insertar una Orden Maestra Activa
-    INSERT INTO public.master_orders (id, fleet_id, client_id, description, status)
-    VALUES ('m0000000-0000-0000-0000-000000000001', v_fleet_id, 'c0000000-0000-0000-0000-000000000001', 'Contrato Pavimentación Muelle', 'ACTIVE')
+    INSERT INTO public.master_orders (id, material_type, target_tonnage, status, origin_geofence, destination_geofence, created_by)
+    VALUES ('e0000000-0000-0000-0000-000000000001', 'GRAVEL', 5000, 'OPEN', '{}'::jsonb, '{}'::jsonb, v_admin_id)
     ON CONFLICT (id) DO NOTHING;
 
     RAISE NOTICE '✅ Sembrado B2B completado con éxito. Flota operativa y lista para despacho.';
