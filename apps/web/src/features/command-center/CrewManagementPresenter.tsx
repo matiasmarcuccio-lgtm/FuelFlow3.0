@@ -71,12 +71,12 @@ export const CrewManagementPresenter: React.FC<CrewManagementProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {crew.length === 0 ? (
+                {crew.filter(m => m.status !== 'INACTIVE').length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-slate-500 font-mono">No active crew members found.</td>
+                    <td colSpan={4} className="px-4 py-8 text-center text-slate-500 font-mono">No active crew members found.</td>
                   </tr>
                 ) : (
-                  crew.map((member) => (
+                  crew.filter(m => m.status !== 'INACTIVE').map((member) => (
                     <tr key={member.id} className="border-b border-slate-800/50 hover:bg-slate-800/50 transition-colors">
                       <td className="px-4 py-3 font-medium text-white">{member.full_name}</td>
                       <td className="px-4 py-3">
