@@ -11,6 +11,7 @@ import { FleetDashboard } from './pages/FleetDashboard';
 import { JITSiteDashboard } from './pages/JITSiteDashboard';
 import { CommandCenterContainer } from './features/command-center/CommandCenterContainer';
 import { HumanResourcesContainer } from './features/command-center/HumanResourcesContainer';
+import { FitterDashboard } from './features/fitter/FitterDashboard';
 import { Map, Truck, HardHat, FileText, Users, Activity, Target } from 'lucide-react';
 
 // Tipos de Propósito de Hardware y Perfil
@@ -228,6 +229,11 @@ export const App: React.FC = () => {
   // 🛑 BARRERA ZERO-TRUST DE ONBOARDING
   if (profile && profile.role === 'pending_onboarding') {
     return <OnboardingGate userEmail={profile.email || ''} userId={profile.id} />;
+  }
+
+  // 🛑 BARRERA WHS DE TERRENO (PORTAL DEL MECÁNICO)
+  if (profile && profile.role === 'fitter') {
+    return <FitterDashboard onPurgeDevice={executeDevicePurge} />;
   }
 
   // ENCLAVAMIENTO DE ROLES: Verificar quién tiene permiso para ver qué tablero
