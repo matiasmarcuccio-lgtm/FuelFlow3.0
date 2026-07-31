@@ -4,6 +4,7 @@ import { AdministrativeLockdown } from '../components/AdministrativeLockdown';
 
 interface PreStartKioskProps {
   operatorName: string;
+  assignmentId: string;
   assetId: string;
   assetName: string;
   onPreStartCompleted: (passed: boolean) => void;
@@ -60,6 +61,7 @@ type ItemResult = 'PASS' | 'FAIL' | 'UNTESTED';
 
 export const PreStartKiosk: React.FC<PreStartKioskProps> = ({
   operatorName,
+  assignmentId,
   assetId,
   assetName,
   onPreStartCompleted,
@@ -117,16 +119,14 @@ export const PreStartKiosk: React.FC<PreStartKioskProps> = ({
     );
 
     const payload = {
-      p_asset_id: assetId,
-      p_checklist_data: results,
-      p_defect_notes: defectNotes,
-      p_passed: !hasCriticalFail,
-      p_client_timestamp: new Date().toISOString(),
+      p_assignment_id: assignmentId,
+      p_results: results,
+      p_fatal: hasCriticalFail
     };
 
     try {
-      // Invocación al procedimiento atómico de registro WHS
-      const { error } = await supabase.rpc('fn_submit_whs_prestart', payload);
+      // Invocación al procedimiento atómico que valida, audita y transmuta el estado de la asignación.
+      const { data: success, error } = await supabase.rpc('fn_cabin_accept_dispatch', payload);
 
       if (error) throw new Error(error.message);
 

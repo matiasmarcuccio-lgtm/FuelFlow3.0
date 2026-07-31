@@ -11,6 +11,7 @@ type TerminalMode =
   | 'INITIALIZING' 
   | 'ENROLLMENT_REQUIRED' 
   | 'PIN_REQUIRED' 
+  | 'WAITING_DISPATCH'
   | 'PRESTART_REQUIRED' 
   | 'OPERATIONS_ACTIVE' 
   | 'SYSTEM_ERROR';
@@ -31,6 +32,7 @@ export const CabinTerminalWrapper: React.FC = () => {
   const [operatorName, setOperatorName] = useState<string>('OPERARIO');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [assignedAsset, setAssignedAsset] = useState<AssetData | null>(null);
+  const [assignmentId, setAssignmentId] = useState<string | null>(null);
 
   // ESTADO RAÍZ PARA EL MODAL DE REPOSTAJE (ACCESIBLE EN CUALQUIER MODO OPERATIVO)
   const [isFuelModalOpen, setIsFuelModalOpen] = useState<boolean>(false);
@@ -69,40 +71,34 @@ export const CabinTerminalWrapper: React.FC = () => {
       const fullName = (profile.full_name || 'Operario').trim();
       setOperatorName(fullName.toUpperCase());
 
-      let assetId = localStorage.getItem(ASSET_VAULT_KEY);
+      // NO MÁS BÓVEDAS LOCALES. La asignación depende de la orden transaccional del despachador.
+      const { data: assignmentData, error: assignmentErr } = await supabase
+        .from('asset_assignments')
+        .select(`
+          id, 
+          status, 
+          asset_id,
+          assets ( id, internal_code, status, current_engine_hours )
+        `)
+        .eq('driver_id', profile.id)
+        .in('status', ['DISPATCHED', 'IN_PROGRESS'])
+        .maybeSingle();
       
-      if (!assetId) {
-        const { data: assetData, error: assetErr } = await supabase
-          .from('assets')
-          .select('id, internal_code, status, current_engine_hours')
-          .eq('fleet_id', profile.fleet_id)
-          .neq('status', 'maintenance')
-          .limit(1)
-          .maybeSingle();
+      if (assignmentErr) throw new Error(`Error leyendo la matriz de despacho: ${assignmentErr.message}`);
 
-        if (assetErr || !assetData) {
-          throw new Error('No hay maquinaria disponible en su flota para vincular esta cabina.');
-        }
-        assetId = assetData.id;
-        localStorage.setItem(ASSET_VAULT_KEY, assetId);
+      if (assignmentData && assignmentData.assets) {
+        // Ignoramos el error de tipo de Supabase para assets.
+        const assetObj: any = assignmentData.assets;
         setAssignedAsset({
-          ...assetData,
-          current_engine_hours: Number(assetData.current_engine_hours || 0)
+          id: assetObj.id,
+          internal_code: assetObj.internal_code,
+          status: assetObj.status,
+          current_engine_hours: Number(assetObj.current_engine_hours || 0)
         });
+        setAssignmentId(assignmentData.id);
       } else {
-        const { data: existingAsset, error: fetchErr } = await supabase
-          .from('assets')
-          .select('id, internal_code, status, current_engine_hours')
-          .eq('id', assetId)
-          .single();
-          
-        if (fetchErr) throw new Error(`Error de activo: ${fetchErr.message}`);
-        if (existingAsset) {
-          setAssignedAsset({
-            ...existingAsset,
-            current_engine_hours: Number(existingAsset.current_engine_hours || 0)
-          });
-        }
+        setAssignedAsset(null);
+        setAssignmentId(null);
       }
 
       setMode('PIN_REQUIRED');
@@ -120,14 +116,34 @@ export const CabinTerminalWrapper: React.FC = () => {
 
   // MANEJADORES DE TRANSICIÓN INDUSTRIAL
   const handleEnrollmentComplete = () => evaluateTerminalState();
-  const handlePinAuthorized = () => setMode('PRESTART_REQUIRED');
+  const handlePinAuthorized = () => {
+    // Post-PIN, verificamos si tenemos turno y en qué estado.
+    if (!assignedAsset || !assignmentId) {
+      setMode('WAITING_DISPATCH');
+      return;
+    }
+    // Si tenemos asignación, miramos su estado (que leímos en evaluateTerminalState)
+    // Nota: Como no tenemos el estado de la asignación suelto, lo inferiremos o lo guardaremos.
+    // Pequeño workaround: Si llegamos aquí y es DISPATCHED, vamos a PRESTART. 
+    // Para simplificar, siempre vamos a PRESTART si tenemos asset (el Kiosko decidirá).
+    // Mejor aún, agreguemos el chequeo explícito aquí.
+    supabase
+        .from('asset_assignments')
+        .select('status')
+        .eq('id', assignmentId)
+        .single()
+        .then(({ data }) => {
+            if (data?.status === 'DISPATCHED') setMode('PRESTART_REQUIRED');
+            else if (data?.status === 'IN_PROGRESS') setMode('OPERATIONS_ACTIVE');
+            else setMode('WAITING_DISPATCH');
+        });
+  };
   
   const handlePreStartCompleted = (passed: boolean) => {
     if (passed) {
       setMode('OPERATIONS_ACTIVE');
     } else {
-      localStorage.removeItem(ASSET_VAULT_KEY);
-      setErrorMessage('MAQUINARIA ENCLAVADA (DANGER TAG). La máquina ha sido inhabilitada por motivos de seguridad y requiere intervención de taller.');
+      setErrorMessage('MAQUINARIA ENCLAVADA (LOTO APLICADO). La máquina ha sido inhabilitada por defecto crítico en terreno.');
       setMode('SYSTEM_ERROR');
     }
   };
@@ -184,12 +200,27 @@ export const CabinTerminalWrapper: React.FC = () => {
     return <PreStartPinScreen operatorName={operatorName} onAuthorized={handlePinAuthorized} />;
   }
 
-  if (mode === 'PRESTART_REQUIRED' && assignedAsset) {
+  if (mode === 'WAITING_DISPATCH') {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center font-mono">
+        <div className="w-16 h-16 border-4 border-slate-700 border-t-amber-500 rounded-full animate-spin mb-8"></div>
+        <h2 className="text-2xl font-bold text-amber-500 tracking-widest uppercase mb-4">Aguardando Órdenes</h2>
+        <p className="text-slate-400 text-sm max-w-md">No posee ningún despacho activo. Por favor aguarde la orden de la Romana o Despacho central. La terminal se activará automáticamente.</p>
+        
+        <button onClick={() => window.location.reload()} className="mt-12 text-[10px] text-slate-600 hover:text-slate-400 border border-slate-800 px-4 py-2 uppercase">
+          Forzar Sincronización Manual
+        </button>
+      </div>
+    );
+  }
+
+  if (mode === 'PRESTART_REQUIRED' && assignedAsset && assignmentId) {
     return (
       <PreStartKiosk
         operatorName={operatorName}
+        assignmentId={assignmentId}
         assetId={assignedAsset.id}
-        assetName={assignedAsset.name}
+        assetName={assignedAsset.internal_code}
         onPreStartCompleted={handlePreStartCompleted}
       />
     );
