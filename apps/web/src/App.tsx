@@ -10,6 +10,7 @@ import { InviteRegistration } from './features/onboarding/InviteRegistration';
 import { FleetDashboard } from './pages/FleetDashboard';
 import { JITSiteDashboard } from './pages/JITSiteDashboard';
 import { CommandCenterContainer } from './features/command-center/CommandCenterContainer';
+import { HumanResourcesContainer } from './features/command-center/HumanResourcesContainer';
 import { Map, Truck, HardHat, FileText, Users, Activity, Target } from 'lucide-react';
 
 // Tipos de Propósito de Hardware y Perfil

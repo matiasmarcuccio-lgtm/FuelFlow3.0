@@ -23,7 +23,7 @@ export const JITQueueSidebar: React.FC<JITQueueSidebarProps> = ({ projectId }) =
                     id, 
                     joined_queue_at, 
                     status,
-                    assets ( id, registration_number, asset_type )
+                    assets ( id, internal_code, category )
                 `)
                 .eq('project_id', projectId)
                 .eq('status', 'waiting')

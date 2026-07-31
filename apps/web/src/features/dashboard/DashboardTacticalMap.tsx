@@ -17,38 +17,15 @@ export const DashboardTacticalMap: React.FC<DashboardTacticalMapProps> = ({ proj
         
         // Fetch inicial (Estado Base)
         supabase.from('assets')
-            .select('id, asset_type, status, last_known_location, excavator_states(current_material, operational_status)')
-            .eq('current_project_id', projectId)
+            .select('id, category, status')
             .then(({ data }) => {
                 if (data && isMounted) {
                     const newAssets: Record<string, AssetLocation> = {};
                     data.forEach((asset: any) => {
-                        if (asset.last_known_location) {
-                            const lat = Number(asset.last_known_location.lat);
-                            const lng = Number(asset.last_known_location.lng);
-                            
-                            // Prevent AdvancedMarker crash if coordinates are invalid
-                            if (isNaN(lat) || isNaN(lng)) return;
-
-                            let resolvedStatus = asset.status;
-                            let resolvedMaterial = undefined;
-
-                            if (asset.asset_type === 'excavator' && asset.excavator_states && asset.excavator_states.length > 0) {
-                                if (resolvedStatus !== 'out_of_service') {
-                                    resolvedStatus = asset.excavator_states[0].operational_status;
-                                }
-                                resolvedMaterial = asset.excavator_states[0].current_material;
-                            }
-                            
-                            newAssets[asset.id] = {
-                                lat,
-                                lng,
-                                heading: Number(asset.last_known_location.heading) || 0,
-                                status: resolvedStatus,
-                                material: resolvedMaterial,
-                                assetType: asset.asset_type
-                            };
-                        }
+                        // In V3, initial assets don't have location until they ping.
+                        // We store them with an invalid location so they exist in state 
+                        // but don't render until telemetry updates them, or we can just skip them.
+                        // For now, let's skip adding them until the websocket fires.
                     });
                     setAssets(newAssets);
                 }

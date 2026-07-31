@@ -45,7 +45,7 @@ export const JITQueueSidebarPresenter: React.FC<JITQueueSidebarPresenterProps> =
                         const waitTimeMs = Date.now() - new Date(item.joined_queue_at || '').getTime();
                         const waitTimeMins = Math.floor(waitTimeMs / 60000);
                         const isStagnant = waitTimeMins >= 15;
-                        const assetLabel = (item.assets as any)?.registration_number || 'Truck';
+                        const assetLabel = (item.assets as any)?.internal_code || 'Truck';
                         const isFirst = index === 0;
 
                         return (
