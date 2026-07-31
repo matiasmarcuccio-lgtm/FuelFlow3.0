@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import type { BillingProjectSite } from '../../types/whs.types';
+import { FinancialReconciliationContainer } from './FinancialReconciliationContainer';
 
 export const BillingPortal: React.FC<{ userEmail: string }> = ({ userEmail }) => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -159,6 +160,8 @@ export const BillingPortal: React.FC<{ userEmail: string }> = ({ userEmail }) =>
           </div>
         ))}
       </div>
+      
+      <FinancialReconciliationContainer />
     </div>
   );
 };
