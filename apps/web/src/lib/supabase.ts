@@ -36,3 +36,8 @@ export const supabase = createClient<Database>(
       fetch: customFetch
     },
 });
+
+// Exposición global (temporal) para inyecciones tácticas desde la consola F12
+if (typeof window !== 'undefined') {
+  (window as any).supabase = supabase;
+}

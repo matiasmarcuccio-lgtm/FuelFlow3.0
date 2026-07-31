@@ -232,9 +232,10 @@ export const CabinTerminalWrapper: React.FC = () => {
       
       {/* MÓDULO SUPERIOR: RELOJ BIOLÓGICO Y FATIGA WHS (CONDUCTO 1) */}
       <section className="w-full max-w-5xl mx-auto">
-        {assignedAsset && (
+        {assignedAsset && assignmentId && (
           <CabinShiftHUD 
             assetId={assignedAsset.id} 
+            assignmentId={assignmentId}
             onShiftTerminated={handleShiftTerminated} 
           />
         )}

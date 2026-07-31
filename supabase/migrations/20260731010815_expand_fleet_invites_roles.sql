@@ -1,4 +1,5 @@
 -- Expansión de la restricción de roles para invitaciones
+ALTER TABLE "public"."fleet_invites" ADD COLUMN IF NOT EXISTS "role" character varying(50) NOT NULL DEFAULT 'driver';
 ALTER TABLE "public"."fleet_invites" DROP CONSTRAINT IF EXISTS "fleet_invites_role_check";
 ALTER TABLE "public"."fleet_invites" ADD CONSTRAINT "fleet_invites_role_check" 
 CHECK (("role")::"text" = ANY ((ARRAY['driver'::character varying, 'fitter'::character varying, 'supervisor'::character varying, 'fleet_manager'::character varying, 'dispatcher'::character varying])::"text"[]));

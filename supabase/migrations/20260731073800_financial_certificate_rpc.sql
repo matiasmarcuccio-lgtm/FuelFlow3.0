@@ -35,7 +35,7 @@ BEGIN
     -- 2. Validar y bloquear los turnos seleccionados (Prevenir Doble Facturación)
     -- Usamos FOR UPDATE para bloquear las filas durante esta transacción
     FOR v_assignment IN 
-        SELECT id, master_order_id, (current_engine_hours) as hours_logged -- Asumiendo cálculo simplificado
+        SELECT id
         FROM public.asset_assignments 
         WHERE id = ANY(p_assignment_ids) 
           AND status = 'COMPLETED' 

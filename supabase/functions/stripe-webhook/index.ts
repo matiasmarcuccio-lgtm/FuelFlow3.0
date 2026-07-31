@@ -132,11 +132,14 @@ serve(async (req: Request) => {
         const subscription = event.data.object as Stripe.Subscription;
         const customerId = subscription.customer as string;
 
-        await adminClient
+        const { error: cancelError } = await adminClient
           .from('fleets')
           .update({ status: 'canceled', grace_period_until: null })
           .eq('stripe_customer_id', customerId);
           
+        if (cancelError) {
+          throw new Error(`Fallo silente en Supabase al cancelar: ${cancelError.message}`);
+        }
         break;
       }
     }

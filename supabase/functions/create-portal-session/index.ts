@@ -28,20 +28,24 @@ serve(async (req: Request) => {
     );
 
     // 1. Validar la identidad del usuario que invoca la función (Zero-Trust)
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error('NO_AUTORIZADO: Faltan credenciales.');
+    const token = authHeader.replace('Bearer ', '');
+    
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError || !user) {
-      throw new Error('NO_AUTORIZADO: Debe iniciar sesión para acceder al portal bancario.');
+      throw new Error(`NO_AUTORIZADO: Debe iniciar sesión para acceder al portal bancario. Detalle: ${userError?.message || 'Usuario no encontrado'}`);
     }
 
-    // 2. Extraer el perfil, el rol comercial y la flota asociada
+    // 2. Extraer el perfil, el rol comercial y la flota asociada (Usando el JWT del usuario para respetar RLS)
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('role, fleet_id, email, fleets(id, name, stripe_customer_id)')
+      .select('role, fleet_id, fleets(id, name, stripe_customer_id)')
       .eq('id', user.id)
       .single();
 
     if (profileError || !profile) {
-      throw new Error('PERFIL_NO_ENCONTRADO: No se pudo leer la jurisdicción del usuario.');
+      throw new Error(`PERFIL_NO_ENCONTRADO: ${profileError?.message || 'No se encontró el registro comercial.'}`);
     }
 
     if (profile.role !== 'account_owner') {
@@ -64,7 +68,7 @@ serve(async (req: Request) => {
 
       customerId = newCustomer.id;
 
-      // Anclar retroactivamente el ID bancario en PostgreSQL utilizando el Service Role Key
+      // Anclar retroactivamente el ID bancario en PostgreSQL utilizando el Service Role Key (Solo para escritura crítica)
       const adminClient = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
