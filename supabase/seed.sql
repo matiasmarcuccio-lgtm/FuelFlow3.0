@@ -104,5 +104,18 @@ BEGIN
     -- Consolidar la Vista Materializada para el Command Center
     REFRESH MATERIALIZED VIEW CONCURRENTLY public.mv_predictive_maintenance_roster;
 
+    -- ========================================================================
+    -- FASE F: JURISDICCIÓN COMERCIAL (Clientes y Órdenes Maestras)
+    -- ========================================================================
+    -- Insertar un Cliente de Prueba
+    INSERT INTO public.clients (id, fleet_id, name, status)
+    VALUES ('c0000000-0000-0000-0000-000000000001', v_fleet_id, 'Hobart City Council', 'ACTIVE')
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Insertar una Orden Maestra Activa
+    INSERT INTO public.master_orders (id, fleet_id, client_id, description, status)
+    VALUES ('m0000000-0000-0000-0000-000000000001', v_fleet_id, 'c0000000-0000-0000-0000-000000000001', 'Contrato Pavimentación Muelle', 'ACTIVE')
+    ON CONFLICT (id) DO NOTHING;
+
     RAISE NOTICE '✅ Sembrado B2B completado con éxito. Flota operativa y lista para despacho.';
 END $$;

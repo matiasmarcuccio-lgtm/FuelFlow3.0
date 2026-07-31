@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.fleet_billing_ledger (
 
 -- Habilitar RLS en la tabla del ledger
 ALTER TABLE public.fleet_billing_ledger ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "SuperAdmins and Fleet Managers can view their volumetrics" ON public.fleet_billing_ledger;
 CREATE POLICY "SuperAdmins and Fleet Managers can view their volumetrics"
     ON public.fleet_billing_ledger FOR SELECT
     USING (
