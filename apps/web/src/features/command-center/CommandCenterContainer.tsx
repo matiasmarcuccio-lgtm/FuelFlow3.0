@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { CommandCenterPresenter } from './CommandCenterPresenter';
 import { DispatchModalPresenter } from './DispatchModalPresenter';
+import { HumanResourcesContainer } from './HumanResourcesContainer';
 import type { Operator } from './DispatchModalPresenter';
 import { useCommandCenterRealtime } from './useCommandCenterRealtime';
 
@@ -14,7 +15,8 @@ export const CommandCenterContainer: React.FC<CommandCenterContainerProps> = ({ 
   // 1. Acoplar el motor de invalidación WebSocket (construido en la fase anterior)
   useCommandCenterRealtime(fleetId);
 
-  // Estados locales para el manejo del Modal
+  // Estados locales para el manejo del Modal y Tabs
+  const [activeTab, setActiveTab] = useState<'tactical' | 'hr' | 'assets'>('tactical');
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -109,36 +111,76 @@ export const CommandCenterContainer: React.FC<CommandCenterContainerProps> = ({ 
   if (isLoadingAssets) return <div className="text-white p-6 font-mono text-xl">SINCRONIZANDO TELEMETRÍA...</div>;
 
   return (
-    <>
-      {errorMessage && (
-        <div className="bg-red-900 text-white p-4 text-center font-bold font-mono border-b border-red-700">
-          ERROR TRANSACCIONAL: {errorMessage}
-        </div>
-      )}
+    <div className="min-h-screen bg-slate-950 flex flex-col font-sans select-none text-foreground">
+      {/* Tab Navigation */}
+      <div className="bg-slate-900 border-b border-slate-800 p-4 flex gap-4">
+        <button
+          onClick={() => setActiveTab('tactical')}
+          className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-wider transition-colors ${
+            activeTab === 'tactical' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          Tactical Dispatch
+        </button>
+        <button
+          onClick={() => setActiveTab('hr')}
+          className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-wider transition-colors ${
+            activeTab === 'hr' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          Human Resources
+        </button>
+        <button
+          onClick={() => setActiveTab('assets')}
+          className={`px-4 py-2 rounded-lg font-bold text-sm uppercase tracking-wider transition-colors ${
+            activeTab === 'assets' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+          }`}
+        >
+          Asset Management
+        </button>
+      </div>
 
-      <CommandCenterPresenter 
-        assets={assets}
-        isMutating={dispatchMutation.isPending || revokeMutation.isPending}
-        onInitiateDispatch={(assetId) => setSelectedAssetId(assetId)}
-        onRevokeDispatch={(shiftId) => revokeMutation.mutate(shiftId)}
-      />
+      <div className="flex-1 p-6">
+        {errorMessage && (
+          <div className="bg-red-900 text-white p-4 text-center font-bold font-mono border-b border-red-700 mb-6 rounded-lg">
+            ERROR TRANSACCIONAL: {errorMessage}
+          </div>
+        )}
 
-      {selectedAssetId && (
-        <DispatchModalPresenter 
-          assetCode={assets.find(a => a.id === selectedAssetId)?.internal_code || 'DESC'}
-          operators={operators}
-          isSubmitting={dispatchMutation.isPending}
-          fatigueThreshold={10}
-          hardLimit={12}
-          onConfirm={(operatorId, overrideReason) => 
-            dispatchMutation.mutate({ assetId: selectedAssetId, operatorId, overrideReason })
-          }
-          onCancel={() => {
-            setSelectedAssetId(null);
-            setErrorMessage(null);
-          }}
-        />
-      )}
-    </>
+        {activeTab === 'tactical' && (
+          <CommandCenterPresenter 
+            assets={assets}
+            isMutating={dispatchMutation.isPending || revokeMutation.isPending}
+            onInitiateDispatch={(assetId) => setSelectedAssetId(assetId)}
+            onRevokeDispatch={(shiftId) => revokeMutation.mutate(shiftId)}
+          />
+        )}
+
+        {activeTab === 'hr' && (
+          <HumanResourcesContainer fleetId={fleetId} />
+        )}
+
+        {activeTab === 'assets' && (
+          <div className="text-slate-400 text-center mt-20">Asset Management Module under construction...</div>
+        )}
+
+        {selectedAssetId && activeTab === 'tactical' && (
+          <DispatchModalPresenter 
+            assetCode={assets.find(a => a.id === selectedAssetId)?.internal_code || 'DESC'}
+            operators={operators}
+            isSubmitting={dispatchMutation.isPending}
+            fatigueThreshold={10}
+            hardLimit={12}
+            onConfirm={(operatorId, overrideReason) => 
+              dispatchMutation.mutate({ assetId: selectedAssetId, operatorId, overrideReason })
+            }
+            onCancel={() => {
+              setSelectedAssetId(null);
+              setErrorMessage(null);
+            }}
+          />
+        )}
+      </div>
+    </div>
   );
 };

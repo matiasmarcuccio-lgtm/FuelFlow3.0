@@ -29,7 +29,7 @@ export const CommandCenterPresenter: React.FC<CommandCenterProps> = ({
   isMutating
 }) => {
   return (
-    <div className="min-h-screen bg-slate-950 p-6 font-sans select-none">
+    <div className="w-full">
       <div className="mb-8">
         <h1 className="text-3xl font-black text-white uppercase tracking-widest flex items-center gap-3">
           <span className="bg-blue-600 p-2 rounded-lg text-white">📡</span> 

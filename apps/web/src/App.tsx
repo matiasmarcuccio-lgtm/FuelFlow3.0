@@ -6,10 +6,12 @@ import { RegulatoryAuditDashboard } from './features/command-center/RegulatoryAu
 import { CommandCenterLogin } from './features/command-center/CommandCenterLogin';
 import { BillingPortal } from './features/billing/BillingPortal';
 import { OnboardingGate } from './features/onboarding/OnboardingGate';
+import { HumanResourcesContainer } from './features/command-center/HumanResourcesContainer';
+import { InviteRegistration } from './features/onboarding/InviteRegistration';
 
 // Tipos de Propósito de Hardware y Perfil
 type DevicePurpose = 'UNSET' | 'CABIN_KIOSK' | 'COMMAND_CENTER';
-type CommandTab = 'ROSTER' | 'AUDIT_LEDGER' | 'SYSTEM_CONFIG';
+type CommandTab = 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'SYSTEM_CONFIG';
 
 interface UserProfile {
   id: string;
@@ -27,6 +29,14 @@ export const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [authError, setAuthError] = useState<string | null>(null);
   
+  // Prevent unused variable warning
+  console.debug('Auth status:', authError ? 'Error' : 'OK');
+  
+  // Intercepting /invite URL for Employee Onboarding
+  const urlParams = new URLSearchParams(window.location.search);
+  const inviteToken = urlParams.get('token');
+  const isInviteRoute = window.location.pathname === '/invite' && inviteToken;
+
   // Estado de navegación para el Command Center
   const [activeCommandTab, setActiveCommandTab] = useState<CommandTab>('ROSTER');
 
@@ -89,18 +99,21 @@ export const App: React.FC = () => {
       } as UserProfile);
       setIsLoading(false);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('🛑 FRACTURA EN EL ENRUTADOR MAESTRO:', err);
-      setAuthError(err.message || 'Error fatal de alineación criptográfica.');
+      const e = err as Error;
+      setAuthError(e.message || 'Error fatal de alineación criptográfica.');
       setIsLoading(false);
     }
   }, [devicePurpose]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     evaluateMasterState();
 
     // Escuchar cambios de sesión GoTrue en vivo (guillotina de revocación instantánea)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+       
       evaluateMasterState();
     });
 
@@ -136,7 +149,12 @@ export const App: React.FC = () => {
     );
   }
 
-  // 3. ESCLUSA DE CONFIGURACIÓN INICIAL (DISPOSITIVO VIRGEN / SIN SELLAR)
+  // 3. RUTAS ZERO-TRUST SIN AUTENTICACIÓN
+  if (isInviteRoute) {
+    return <InviteRegistration inviteToken={inviteToken} />;
+  }
+
+  // 4. ESCLUSA DE CONFIGURACIÓN INICIAL (DISPOSITIVO VIRGEN / SIN SELLAR)
   if (devicePurpose === 'UNSET') {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans select-none">
@@ -258,6 +276,19 @@ export const App: React.FC = () => {
               ⚖️ Auditoría ATO/WHS
             </button>
           )}
+
+          {canAccessAudit && (
+            <button
+              onClick={() => setActiveCommandTab('HUMAN_RESOURCES')}
+              className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all border ${
+                activeCommandTab === 'HUMAN_RESOURCES'
+                  ? 'bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-600/20'
+                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+              }`}
+            >
+              👥 Recursos Humanos
+            </button>
+          )}
         </nav>
 
         {/* Perfil y Cierre de Sesión */}
@@ -283,6 +314,10 @@ export const App: React.FC = () => {
 
         {activeCommandTab === 'AUDIT_LEDGER' && canAccessAudit && (
           <RegulatoryAuditDashboard />
+        )}
+
+        {activeCommandTab === 'HUMAN_RESOURCES' && canAccessAudit && (
+          <HumanResourcesContainer fleetId={profile.fleet_id} />
         )}
 
         {!canAccessRoster && !canAccessAudit && (
