@@ -10,8 +10,6 @@ interface ShiftData {
   } | null;
   assets: {
     internal_code: string;
-    type: string;
-    operational_cost_per_hour: number | null;
   };
   profiles: {
     first_name: string;

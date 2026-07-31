@@ -24,9 +24,7 @@ export const FinancialReconciliationContainer: React.FC = () => {
             description
           ),
           assets (
-            internal_code,
-            type,
-            operational_cost_per_hour
+            internal_code
           ),
           profiles (
             first_name,
