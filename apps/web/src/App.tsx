@@ -11,7 +11,7 @@ import { InviteRegistration } from './features/onboarding/InviteRegistration';
 
 // Tipos de Propósito de Hardware y Perfil
 type DevicePurpose = 'UNSET' | 'CABIN_KIOSK' | 'COMMAND_CENTER';
-type CommandTab = 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'SYSTEM_CONFIG';
+type CommandTab = 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'BILLING' | 'SYSTEM_CONFIG';
 
 interface UserProfile {
   id: string;
@@ -226,14 +226,10 @@ export const App: React.FC = () => {
     return <OnboardingGate userEmail={profile.email || ''} userId={profile.id} />;
   }
 
-  // 🛑 COMPUERTA DE AISLAMIENTO FINANCIERO (ZERO-TRUST)
-  if (profile && profile.role === 'account_owner') {
-    return <BillingPortal userEmail={profile.email || ''} />;
-  }
-
   // ENCLAVAMIENTO DE ROLES: Verificar quién tiene permiso para ver qué tablero
-  const canAccessRoster = ['super_admin', 'fleet_manager', 'fitter', 'dispatcher'].includes(profile.role);
-  const canAccessAudit = ['super_admin', 'fleet_manager'].includes(profile.role);
+  const canAccessRoster = ['super_admin', 'account_owner', 'fleet_manager', 'fitter', 'dispatcher'].includes(profile.role);
+  const canAccessAudit = ['super_admin', 'account_owner', 'fleet_manager'].includes(profile.role);
+  const canAccessBilling = ['super_admin', 'account_owner'].includes(profile.role);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans select-none overflow-x-hidden">
@@ -289,6 +285,19 @@ export const App: React.FC = () => {
               👥 Recursos Humanos
             </button>
           )}
+
+          {canAccessBilling && (
+            <button
+              onClick={() => setActiveCommandTab('BILLING')}
+              className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all border ${
+                activeCommandTab === 'BILLING'
+                  ? 'bg-purple-600 text-white border-purple-400 shadow-lg shadow-purple-600/20'
+                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+              }`}
+            >
+              💳 Facturación
+            </button>
+          )}
         </nav>
 
         {/* Perfil y Cierre de Sesión */}
@@ -320,7 +329,11 @@ export const App: React.FC = () => {
           <HumanResourcesContainer fleetId={profile.fleet_id} />
         )}
 
-        {!canAccessRoster && !canAccessAudit && (
+        {activeCommandTab === 'BILLING' && canAccessBilling && (
+          <BillingPortal userEmail={profile.email || ''} />
+        )}
+
+        {!canAccessRoster && !canAccessAudit && !canAccessBilling && (
           <div className="bg-red-950/30 border-2 border-red-800 p-12 rounded-3xl text-center font-mono text-red-400 uppercase">
             ⚠️ SU ROL ACTUAL ({profile.role}) CARECE DE ADUANAS DE LECTURA ASIGNADAS EN ESTE PANORAMA.
           </div>
