@@ -11,6 +11,7 @@ AS $$
 DECLARE
     v_driver_id UUID;
     v_asset_id UUID;
+    v_current_odometer NUMERIC;
 BEGIN
     -- Validar propiedad del turno
     SELECT driver_id, asset_id INTO v_driver_id, v_asset_id 
@@ -19,6 +20,15 @@ BEGIN
 
     IF v_driver_id != auth.uid() THEN
         RAISE EXCEPTION 'Violación WHS: No puede finalizar un turno que no le pertenece o que ya está cerrado.';
+    END IF;
+
+    -- Validar entropía termodinámica (Odómetro)
+    SELECT current_odometer INTO v_current_odometer
+    FROM public.assets
+    WHERE id = v_asset_id;
+
+    IF p_final_odometer < v_current_odometer THEN
+        RAISE EXCEPTION 'Violación Termodinámica: El odómetro final (%) no puede ser menor al odómetro actual (%).', p_final_odometer, v_current_odometer;
     END IF;
 
     -- Mutación atómica 1: Cerrar el turno
@@ -32,8 +42,9 @@ BEGIN
     WHERE id = v_asset_id;
 
     -- Invocación al módulo huérfano: Encolar facturación
-    -- (Asume que queue_erp_outbox existe y toma el ID de asignación)
-    PERFORM public.queue_erp_outbox(p_assignment_id);
+    -- NOTA: queue_erp_outbox() es una función disparadora (TRIGGER), no puede ser invocada directamente.
+    -- Se omite el PERFORM directo para evitar fallas en tiempo de ejecución. 
+    -- La inserción debe delegarse al trigger sobre execution_certificates o inyectarse manualmente si corresponde.
 
     RETURN TRUE;
 END;
