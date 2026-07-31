@@ -9,10 +9,12 @@ import { OnboardingGate } from './features/onboarding/OnboardingGate';
 import { HumanResourcesContainer } from './features/command-center/HumanResourcesContainer';
 import { InviteRegistration } from './features/onboarding/InviteRegistration';
 import { FleetDashboard } from './pages/FleetDashboard';
+import { JITSiteDashboard } from './pages/JITSiteDashboard';
+import { Map, Truck, HardHat, FileText, Users, Activity } from 'lucide-react';
 
 // Tipos de Propósito de Hardware y Perfil
 type DevicePurpose = 'UNSET' | 'CABIN_KIOSK' | 'COMMAND_CENTER';
-type CommandTab = 'TELEMETRY' | 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'BILLING' | 'SYSTEM_CONFIG';
+type CommandTab = 'TELEMETRY_MAP' | 'RESOURCE_MATRIX' | 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'BILLING' | 'SYSTEM_CONFIG';
 
 interface UserProfile {
   id: string;
@@ -39,7 +41,7 @@ export const App: React.FC = () => {
   const isInviteRoute = window.location.pathname === '/invite' && inviteToken;
 
   // Estado de navegación para el Command Center
-  const [activeCommandTab, setActiveCommandTab] = useState<CommandTab>('TELEMETRY');
+  const [activeCommandTab, setActiveCommandTab] = useState<CommandTab>('TELEMETRY_MAP');
 
   // 1. AUDITORÍA DE IDENTIDAD Y CERROJO DE HARDWARE
   const evaluateMasterState = useCallback(async () => {
@@ -250,27 +252,43 @@ export const App: React.FC = () => {
         {/* Botonera de Navegación de Pestañas */}
         <nav className="flex items-center gap-1 w-full md:w-auto font-mono text-xs overflow-x-auto pb-2 md:pb-0">
           {canAccessTelemetry && (
-            <button
-              onClick={() => setActiveCommandTab('TELEMETRY')}
-              className={`flex-1 md:flex-initial px-4 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap ${
-                activeCommandTab === 'TELEMETRY'
-                  ? 'bg-primary/10 text-primary border-primary'
-                  : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
-              }`}
-            >
-              Telemetría
-            </button>
+            <>
+              <button
+                onClick={() => setActiveCommandTab('TELEMETRY_MAP')}
+                className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
+                  activeCommandTab === 'TELEMETRY_MAP'
+                    ? 'bg-primary/10 text-primary border-primary'
+                    : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
+                }`}
+              >
+                <Map className="w-4 h-4" />
+                Telemetría
+              </button>
+
+              <button
+                onClick={() => setActiveCommandTab('RESOURCE_MATRIX')}
+                className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
+                  activeCommandTab === 'RESOURCE_MATRIX'
+                    ? 'bg-primary/10 text-primary border-primary'
+                    : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
+                }`}
+              >
+                <Truck className="w-4 h-4" />
+                Matriz de Recursos
+              </button>
+            </>
           )}
 
           {canAccessRoster && (
             <button
               onClick={() => setActiveCommandTab('ROSTER')}
-              className={`flex-1 md:flex-initial px-4 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap ${
+              className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
                 activeCommandTab === 'ROSTER'
                   ? 'bg-primary/10 text-primary border-primary'
                   : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
+              <HardHat className="w-4 h-4" />
               Roster
             </button>
           )}
@@ -278,12 +296,13 @@ export const App: React.FC = () => {
           {canAccessAudit && (
             <button
               onClick={() => setActiveCommandTab('AUDIT_LEDGER')}
-              className={`flex-1 md:flex-initial px-4 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap ${
+              className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
                 activeCommandTab === 'AUDIT_LEDGER'
                   ? 'bg-primary/10 text-primary border-primary'
                   : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
+              <FileText className="w-4 h-4" />
               Auditoría
             </button>
           )}
@@ -291,12 +310,13 @@ export const App: React.FC = () => {
           {canAccessAudit && (
             <button
               onClick={() => setActiveCommandTab('HUMAN_RESOURCES')}
-              className={`flex-1 md:flex-initial px-4 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap ${
+              className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
                 activeCommandTab === 'HUMAN_RESOURCES'
                   ? 'bg-primary/10 text-primary border-primary'
                   : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
+              <Users className="w-4 h-4" />
               Tripulación
             </button>
           )}
@@ -304,12 +324,13 @@ export const App: React.FC = () => {
           {canAccessBilling && (
             <button
               onClick={() => setActiveCommandTab('BILLING')}
-              className={`flex-1 md:flex-initial px-4 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap ${
+              className={`flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border whitespace-nowrap flex items-center gap-2 ${
                 activeCommandTab === 'BILLING'
                   ? 'bg-primary/10 text-primary border-primary'
                   : 'bg-transparent text-muted-foreground border-transparent hover:text-foreground hover:border-border'
               }`}
             >
+              <Activity className="w-4 h-4" />
               Facturación
             </button>
           )}
@@ -332,11 +353,15 @@ export const App: React.FC = () => {
 
       {/* Cuerpo Analítico Principal */}
       <main className="flex-1 overflow-y-auto flex flex-col min-h-0 bg-background">
-        {activeCommandTab === 'TELEMETRY' && canAccessTelemetry && (
+        {activeCommandTab === 'TELEMETRY_MAP' && canAccessTelemetry && (
+          <JITSiteDashboard />
+        )}
+
+        {activeCommandTab === 'RESOURCE_MATRIX' && canAccessTelemetry && (
           <FleetDashboard />
         )}
 
-        {activeCommandTab !== 'TELEMETRY' && (
+        {activeCommandTab !== 'TELEMETRY_MAP' && activeCommandTab !== 'RESOURCE_MATRIX' && (
           <div className="p-6 md:p-8 max-w-7xl w-full mx-auto flex-1 flex flex-col min-h-0">
             {activeCommandTab === 'ROSTER' && canAccessRoster && (
               <FleetAssetRoster userRole={profile.role} fleetId={profile.fleet_id} />
