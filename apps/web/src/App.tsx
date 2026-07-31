@@ -8,10 +8,11 @@ import { BillingPortal } from './features/billing/BillingPortal';
 import { OnboardingGate } from './features/onboarding/OnboardingGate';
 import { HumanResourcesContainer } from './features/command-center/HumanResourcesContainer';
 import { InviteRegistration } from './features/onboarding/InviteRegistration';
+import { FleetDashboard } from './pages/FleetDashboard';
 
 // Tipos de Propósito de Hardware y Perfil
 type DevicePurpose = 'UNSET' | 'CABIN_KIOSK' | 'COMMAND_CENTER';
-type CommandTab = 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'BILLING' | 'SYSTEM_CONFIG';
+type CommandTab = 'TELEMETRY' | 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'BILLING' | 'SYSTEM_CONFIG';
 
 interface UserProfile {
   id: string;
@@ -38,7 +39,7 @@ export const App: React.FC = () => {
   const isInviteRoute = window.location.pathname === '/invite' && inviteToken;
 
   // Estado de navegación para el Command Center
-  const [activeCommandTab, setActiveCommandTab] = useState<CommandTab>('ROSTER');
+  const [activeCommandTab, setActiveCommandTab] = useState<CommandTab>('TELEMETRY');
 
   // 1. AUDITORÍA DE IDENTIDAD Y CERROJO DE HARDWARE
   const evaluateMasterState = useCallback(async () => {
@@ -227,6 +228,7 @@ export const App: React.FC = () => {
   }
 
   // ENCLAVAMIENTO DE ROLES: Verificar quién tiene permiso para ver qué tablero
+  const canAccessTelemetry = ['super_admin', 'account_owner', 'fleet_manager', 'dispatcher'].includes(profile.role);
   const canAccessRoster = ['super_admin', 'account_owner', 'fleet_manager', 'fitter', 'dispatcher'].includes(profile.role);
   const canAccessAudit = ['super_admin', 'account_owner', 'fleet_manager'].includes(profile.role);
   const canAccessBilling = ['super_admin', 'account_owner'].includes(profile.role);
@@ -246,11 +248,24 @@ export const App: React.FC = () => {
         </div>
 
         {/* Botonera de Navegación de Pestañas */}
-        <nav className="flex items-center gap-2 w-full md:w-auto font-mono text-xs">
+        <nav className="flex items-center gap-2 w-full md:w-auto font-mono text-xs overflow-x-auto pb-2 md:pb-0">
+          {canAccessTelemetry && (
+            <button
+              onClick={() => setActiveCommandTab('TELEMETRY')}
+              className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${
+                activeCommandTab === 'TELEMETRY'
+                  ? 'bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-600/20'
+                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+              }`}
+            >
+              📡 Telemetría JITSite
+            </button>
+          )}
+
           {canAccessRoster && (
             <button
               onClick={() => setActiveCommandTab('ROSTER')}
-              className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all border ${
+              className={`flex-1 md:flex-initial px-4 py-2.5 rounded-xl font-bold uppercase tracking-wider transition-all border whitespace-nowrap ${
                 activeCommandTab === 'ROSTER'
                   ? 'bg-blue-600 text-white border-blue-400 shadow-lg shadow-blue-600/20'
                   : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
@@ -317,6 +332,10 @@ export const App: React.FC = () => {
 
       {/* Cuerpo Analítico Principal */}
       <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
+        {activeCommandTab === 'TELEMETRY' && canAccessTelemetry && (
+          <FleetDashboard />
+        )}
+
         {activeCommandTab === 'ROSTER' && canAccessRoster && (
           <FleetAssetRoster userRole={profile.role} fleetId={profile.fleet_id} />
         )}
@@ -333,7 +352,7 @@ export const App: React.FC = () => {
           <BillingPortal userEmail={profile.email || ''} />
         )}
 
-        {!canAccessRoster && !canAccessAudit && !canAccessBilling && (
+        {!canAccessTelemetry && !canAccessRoster && !canAccessAudit && !canAccessBilling && (
           <div className="bg-red-950/30 border-2 border-red-800 p-12 rounded-3xl text-center font-mono text-red-400 uppercase">
             ⚠️ SU ROL ACTUAL ({profile.role}) CARECE DE ADUANAS DE LECTURA ASIGNADAS EN ESTE PANORAMA.
           </div>
