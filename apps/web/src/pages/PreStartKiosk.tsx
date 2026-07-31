@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { AdministrativeLockdown } from '../components/AdministrativeLockdown';
 
 interface PreStartKioskProps {
   operatorName: string;
@@ -72,6 +73,7 @@ export const PreStartKiosk: React.FC<PreStartKioskProps> = ({
   const [canConfirm, setCanConfirm] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [fatalDefectTriggered, setFatalDefectTriggered] = useState<boolean>(false);
+  const [isAdministrativeLock, setIsAdministrativeLock] = useState<boolean>(false);
 
   const currentItem = TASMANIA_WHS_CHECKLIST[currentIndex];
   const totalItems = TASMANIA_WHS_CHECKLIST.length;
@@ -79,6 +81,7 @@ export const PreStartKiosk: React.FC<PreStartKioskProps> = ({
   // Al cambiar de tarjeta, bloqueamos los botones durante 1.5 segundos
   // para obligar al operario a leer la directiva técnica.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCanConfirm(false);
     const timer = setTimeout(() => setCanConfirm(true), 1500);
     return () => clearTimeout(timer);
@@ -129,12 +132,13 @@ export const PreStartKiosk: React.FC<PreStartKioskProps> = ({
 
       setIsSubmitting(false);
       onPreStartCompleted(!hasCriticalFail);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
       setIsSubmitting(false);
-      if (err.message.includes('42501') || err.message.includes('BILLING_LOCKDOWN')) {
+      if (errorMsg.includes('42501') || errorMsg.includes('BILLING_LOCKDOWN')) {
         setIsAdministrativeLock(true);
       } else {
-        alert(`ERR_LEDGER_SYNC: No se pudo firmar la bitácora WHS. ${err.message}`);
+        alert(`ERR_LEDGER_SYNC: No se pudo firmar la bitácora WHS. ${errorMsg}`);
       }
     }
   };
