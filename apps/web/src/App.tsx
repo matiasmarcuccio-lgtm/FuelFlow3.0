@@ -11,12 +11,13 @@ import { FleetDashboard } from './pages/FleetDashboard';
 import { JITSiteDashboard } from './pages/JITSiteDashboard';
 import { CommandCenterContainer } from './features/command-center/CommandCenterContainer';
 import { HumanResourcesContainer } from './features/command-center/HumanResourcesContainer';
+import { DeadLetterQueueContainer } from './features/command-center/DeadLetterQueueContainer';
 import { FitterDashboard } from './features/fitter/FitterDashboard';
-import { Map, Truck, HardHat, FileText, Users, Activity, Target } from 'lucide-react';
+import { Map, Truck, HardHat, FileText, Users, Activity, Target, AlertTriangle } from 'lucide-react';
 
 // Tipos de Propósito de Hardware y Perfil
 type DevicePurpose = 'UNSET' | 'CABIN_KIOSK' | 'COMMAND_CENTER';
-type CommandTab = 'TELEMETRY_MAP' | 'RESOURCE_MATRIX' | 'TACTICAL_DISPATCH' | 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'BILLING' | 'SYSTEM_CONFIG';
+type CommandTab = 'TELEMETRY_MAP' | 'RESOURCE_MATRIX' | 'TACTICAL_DISPATCH' | 'ROSTER' | 'AUDIT_LEDGER' | 'HUMAN_RESOURCES' | 'BILLING' | 'SYSTEM_CONFIG' | 'DEAD_LETTER_QUEUE';
 
 interface UserProfile {
   id: string;
@@ -241,6 +242,7 @@ export const App: React.FC = () => {
   const canAccessRoster = ['super_admin', 'account_owner', 'fleet_manager', 'fitter', 'dispatcher'].includes(profile.role);
   const canAccessAudit = ['super_admin', 'account_owner', 'fleet_manager'].includes(profile.role);
   const canAccessBilling = ['super_admin', 'account_owner'].includes(profile.role);
+  const canAccessDLQ = ['super_admin', 'account_owner'].includes(profile.role);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans select-none overflow-hidden h-screen">
@@ -353,6 +355,20 @@ export const App: React.FC = () => {
               <span className="md:max-w-0 md:opacity-0 md:group-hover:max-w-xs md:group-hover:opacity-100 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden">Facturación</span>
             </button>
           )}
+
+          {canAccessDLQ && (
+            <button
+              onClick={() => setActiveCommandTab('DEAD_LETTER_QUEUE')}
+              className={`group flex-1 md:flex-initial px-3 py-2 font-bold uppercase tracking-widest transition-colors border flex items-center justify-center gap-2 ${
+                activeCommandTab === 'DEAD_LETTER_QUEUE'
+                  ? 'bg-red-950/50 text-red-500 border-red-500'
+                  : 'bg-transparent text-muted-foreground border-transparent hover:text-red-400 hover:border-red-900'
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span className="md:max-w-0 md:opacity-0 md:group-hover:max-w-xs md:group-hover:opacity-100 transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden">Dead Letter</span>
+            </button>
+          )}
         </nav>
 
         {/* Perfil y Cierre de Sesión */}
@@ -402,7 +418,11 @@ export const App: React.FC = () => {
               <BillingPortal userEmail={profile.email || ''} />
             )}
 
-            {!canAccessTelemetry && !canAccessRoster && !canAccessAudit && !canAccessBilling && (
+            {activeCommandTab === 'DEAD_LETTER_QUEUE' && canAccessDLQ && (
+              <DeadLetterQueueContainer />
+            )}
+
+            {!canAccessTelemetry && !canAccessRoster && !canAccessAudit && !canAccessBilling && !canAccessDLQ && (
               <div className="bg-red-950/30 border-2 border-red-800 p-12 rounded-3xl text-center font-mono text-red-400 uppercase">
                 ⚠️ SU ROL ACTUAL ({profile.role}) CARECE DE ADUANAS DE LECTURA ASIGNADAS EN ESTE PANORAMA.
               </div>

@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 
 interface CabinShiftHUDProps {
   assetId: string;
+  assignmentId: string;
   onShiftTerminated: () => void;
 }
 
@@ -19,7 +20,7 @@ interface ShiftStatusPayload {
   msg?: string;
 }
 
-export const CabinShiftHUD: React.FC<CabinShiftHUDProps> = ({ assetId, onShiftTerminated }) => {
+export const CabinShiftHUD: React.FC<CabinShiftHUDProps> = ({ assetId, assignmentId, onShiftTerminated }) => {
   const [shiftState, setShiftState] = useState<ShiftStatusPayload | null>(null);
   const [isExecuting, setIsExecuting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -73,6 +74,45 @@ export const CabinShiftHUD: React.FC<CabinShiftHUDProps> = ({ assetId, onShiftTe
       await syncShiftWithLayerZero();
     } catch (err: any) {
       setErrorMsg(`RECHAZO DE ADUANA: ${err.message}`);
+    } finally {
+      setIsExecuting(false);
+    }
+  };
+
+  // 3. REMATE TRANSACCIONAL ERP
+  const executeEndShift = async () => {
+    if (isExecuting) return;
+    
+    // Captura obligatoria de contadores para facturación WHS/ERP
+    const finalOdoRaw = window.prompt('PUNTO DE CONTROL: Ingrese ODOMETRO FINAL (km):');
+    if (finalOdoRaw === null) return;
+    
+    const finalHrsRaw = window.prompt('PUNTO DE CONTROL: Ingrese HORÓMETRO FINAL (hrs):');
+    if (finalHrsRaw === null) return;
+
+    const finalOdo = Number(finalOdoRaw);
+    const finalHrs = Number(finalHrsRaw);
+
+    if (isNaN(finalOdo) || isNaN(finalHrs)) {
+      setErrorMsg('RECHAZO DE ADUANA: Las lecturas deben ser numéricas.');
+      return;
+    }
+
+    setIsExecuting(true);
+    setErrorMsg(null);
+
+    try {
+      const { error } = await supabase.rpc('fn_cabin_end_shift', {
+        p_assignment_id: assignmentId,
+        p_final_odometer: finalOdo,
+        p_final_engine_hours: finalHrs
+      });
+
+      if (error) throw new Error(error.message);
+      
+      onShiftTerminated();
+    } catch (err: any) {
+      setErrorMsg(`RECHAZO DE CIERRE: ${err.message}`);
     } finally {
       setIsExecuting(false);
     }
@@ -241,8 +281,8 @@ export const CabinShiftHUD: React.FC<CabinShiftHUDProps> = ({ assetId, onShiftTe
 
         <button
           onClick={() => {
-            if (window.confirm('¿Confirma el cierre definitivo de su jornada laboral de hoy?')) {
-              executeAction('END_SHIFT');
+            if (window.confirm('¿Confirma el cierre definitivo de su jornada laboral de hoy? Esto inyectará los datos al sistema ERP.')) {
+              executeEndShift();
             }
           }}
           disabled={isExecuting}
